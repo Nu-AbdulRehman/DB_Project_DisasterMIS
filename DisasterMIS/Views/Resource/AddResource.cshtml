@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Add Resource";
+    var resourceTypes = ViewBag.ResourceTypes as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>Add Resource</h1><p>Register a new resource to inventory</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card" style="max-width:640px">
+    <form method="post" asp-action="AddResource">
+        <div class="form-grid">
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Resource Name <span style="color:var(--accent-red)">*</span></label>
+                <input type="text" name="resourceName" id="resourceName" class="form-control" placeholder="e.g. Emergency Food Packs" required />
+            </div>
+            <div class="form-group">
+                <label>Resource Type <span style="color:var(--accent-red)">*</span></label>
+                <select name="resourceTypeID" id="resourceTypeID" class="form-control" required>
+                    <option value="">— Select Type —</option>
+                    @if (resourceTypes != null)
+                    {
+                        foreach (System.Data.DataRow row in resourceTypes.Rows)
+                        {
+                            <option value="@row["ResourceTypeID"]">@row["ResourceType"]</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Initial Stock <span style="color:var(--accent-red)">*</span></label>
+                <input type="number" name="stockLevel" id="stockLevel" class="form-control" min="0" placeholder="0" required />
+            </div>
+            <div class="form-group">
+                <label>Low Stock Threshold <span style="color:var(--accent-red)">*</span></label>
+                <input type="number" name="thresholdLevel" id="thresholdLevel" class="form-control" min="1" placeholder="10" required />
+            </div>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:10px">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Resource</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

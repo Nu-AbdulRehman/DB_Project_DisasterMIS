@@ -1,0 +1,55 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Login";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — DisasterMIS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<div class="login-page">
+    <div class="login-box">
+        <div class="login-logo">
+            <div class="login-logo-icon"><i class="fas fa-shield-alt"></i></div>
+            <div>
+                <h1>DisasterMIS</h1>
+                <p>Smart Disaster Response System</p>
+            </div>
+        </div>
+
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to access the management portal</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert-danger"><i class="fas fa-exclamation-circle"></i> @ViewBag.Error</div>
+        }
+
+        <form method="post" asp-action="Login">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="you@example.com" required autofocus />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required />
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top:8px">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+        </form>
+
+        <p style="margin-top:24px;font-size:12px;color:var(--text-muted);text-align:center">
+            Smart Disaster Response MIS &mdash; &copy; 2026
+        </p>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+@{
+    ViewData["Title"] = "Patients";
+    var patients = ViewBag.Patients as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Patient Registry</h1>
+        <p>All admitted patients and their status</p>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a asp-action="Index"  class="btn btn-secondary"><i class="fas fa-hospital"></i> Hospitals</a>
+        <a asp-action="Admit"  class="btn btn-primary"><i class="fas fa-plus"></i> Admit Patient</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th><th>Name</th><th>Status</th><th>Hospital</th>
+                    <th>Bed</th><th>Admitted</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (patients != null && patients.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in patients.Rows)
+                    {
+                        string st = row["Status"].ToString().ToLower();
+                        bool admitted = row["HospitalName"] != DBNull.Value;
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["PatientID"]</td>
+                            <td><strong>@row["FirstName"] @row["LastName"]</strong></td>
+                            <td><span class="badge badge-@st">@row["Status"]</span></td>
+                            <td>@(admitted ? row["HospitalName"].ToString() : "—")</td>
+                            <td>@(admitted && row["BedNumber"] != DBNull.Value ? row["BedNumber"].ToString() : "—")</td>
+                            <td style="color:var(--text-muted);font-size:12px">
+                                @(row["AdmissionDate"] != DBNull.Value ? Convert.ToDateTime(row["AdmissionDate"]).ToString("dd MMM yy HH:mm") : "—")
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <!-- Update status -->
+                                    <form method="post" asp-action="UpdatePatientStatus" style="display:flex;gap:6px">
+                                        <input type="hidden" name="patientID" value="@row["PatientID"]" />
+                                        <select name="status" class="form-control" style="width:auto;padding:4px 8px;font-size:12px">
+                                            <option value="Stable"   selected="@(row["Status"].ToString()=="Stable"   ? "selected":null)">Stable</option>
+                                            <option value="Critical" selected="@(row["Status"].ToString()=="Critical" ? "selected":null)">Critical</option>
+                                            <option value="Discharged" selected="@(row["Status"].ToString()=="Discharged" ? "selected":null)">Discharged</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-secondary" title="Update"><i class="fas fa-save"></i></button>
+                                    </form>
+                                    <!-- Discharge -->
+                                    @if (admitted && row.Table.Columns.Contains("HospitalID") && row["HospitalID"] != DBNull.Value)
+                                    {
+                                        <form method="post" asp-action="Discharge" onsubmit="return confirm('Discharge this patient?')">
+                                            <input type="hidden" name="patientID"  value="@row["PatientID"]" />
+                                            <input type="hidden" name="hospitalID" value="@row["HospitalID"]" />
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Discharge"><i class="fas fa-door-open"></i></button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">
+                        <i class="fas fa-user-md" style="font-size:32px;display:block;margin-bottom:12px;opacity:.3"></i>
+                        No patients on record
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

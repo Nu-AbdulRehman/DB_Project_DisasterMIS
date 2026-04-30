@@ -1,0 +1,97 @@
+@{
+    ViewData["Title"] = "Audit Log";
+    var logs   = ViewBag.Logs   as System.Data.DataTable;
+    var tables = ViewBag.Tables as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Audit Log</h1>
+        <p>Full system activity trail — Administrator access only</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom:20px">
+    <form method="get" class="filter-bar">
+        <div class="form-group">
+            <label>Table</label>
+            <select name="table" class="form-control">
+                <option value="">All Tables</option>
+                @if (tables != null)
+                {
+                    foreach (System.Data.DataRow row in tables.Rows)
+                    {
+                        <option value="@row["AffectedTable"]" selected="@(ViewBag.TableFilter == row["AffectedTable"].ToString() ? "selected" : null)">@row["AffectedTable"]</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Action</label>
+            <select name="action" class="form-control">
+                <option value="">All Actions</option>
+                <option value="INSERT" selected="@(ViewBag.ActionFilter == "INSERT" ? "selected" : null)">INSERT</option>
+                <option value="UPDATE" selected="@(ViewBag.ActionFilter == "UPDATE" ? "selected" : null)">UPDATE</option>
+                <option value="DELETE" selected="@(ViewBag.ActionFilter == "DELETE" ? "selected" : null)">DELETE</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>From Date</label>
+            <input type="date" name="dateFrom" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>To Date</label>
+            <input type="date" name="dateTo" class="form-control" />
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
+            <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-times"></i> Clear</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>User</th><th>Table</th><th>Action</th><th>Old Value</th><th>New Value</th><th>Timestamp</th></tr>
+            </thead>
+            <tbody>
+                @if (logs != null && logs.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in logs.Rows)
+                    {
+                        string action = row["Action"].ToString().ToUpper();
+                        string actionCss = action == "INSERT" ? "badge-insert" : action == "UPDATE" ? "badge-update" : "badge-delete";
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["LogID"]</td>
+                            <td>
+                                <a asp-action="UserActivity" asp-route-userID="@row["UserID"]"
+                                   style="color:var(--accent-2);text-decoration:none;font-weight:500">
+                                    @row["UserName"]
+                                </a>
+                            </td>
+                            <td style="font-size:12px;font-weight:600;color:var(--text-muted)">@row["AffectedTable"]</td>
+                            <td><span class="badge @actionCss">@action</span></td>
+                            <td style="color:var(--text-muted);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                @(row["OldValue"] == DBNull.Value ? "—" : row["OldValue"])
+                            </td>
+                            <td style="color:var(--text-muted);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                @(row["NewValue"] == DBNull.Value ? "—" : row["NewValue"])
+                            </td>
+                            <td style="color:var(--text-muted);font-size:12px">@(Convert.ToDateTime(row["Timestamp"]).ToString("dd MMM yy HH:mm:ss"))</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">
+                        <i class="fas fa-history" style="font-size:32px;display:block;margin-bottom:12px;opacity:.3"></i>
+                        No audit logs found
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

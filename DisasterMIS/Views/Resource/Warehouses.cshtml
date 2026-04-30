@@ -1,0 +1,53 @@
+@{
+    ViewData["Title"] = "Warehouse Stock";
+    var stock      = ViewBag.Stock      as System.Data.DataTable;
+    var warehouses = ViewBag.Warehouses as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>Warehouse Stock</h1><p>Stock levels by warehouse location</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<!-- Warehouse summary cards -->
+@if (warehouses != null && warehouses.Rows.Count > 0)
+{
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:24px">
+        @foreach (System.Data.DataRow wh in warehouses.Rows)
+        {
+            <div class="card" style="padding:18px">
+                <div style="font-weight:600;margin-bottom:6px"><i class="fas fa-warehouse" style="color:var(--accent);margin-right:8px"></i>@wh["Name"]</div>
+                <div style="font-size:12px;color:var(--text-muted)"><i class="fas fa-map-marker-alt" style="margin-right:4px"></i>@wh["Location"]</div>
+            </div>
+        }
+    </div>
+}
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Warehouse</th><th>Location</th><th>Resource</th><th>Type</th><th>Stock</th></tr>
+            </thead>
+            <tbody>
+                @if (stock != null && stock.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in stock.Rows)
+                    {
+                        <tr>
+                            <td><strong>@row["WarehouseName"]</strong></td>
+                            <td style="color:var(--text-muted)">@row["Location"]</td>
+                            <td>@row["ResourceName"]</td>
+                            <td style="color:var(--text-muted)">@row["ResourceType"]</td>
+                            <td><strong>@row["Stock"]</strong></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">No warehouse stock data</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

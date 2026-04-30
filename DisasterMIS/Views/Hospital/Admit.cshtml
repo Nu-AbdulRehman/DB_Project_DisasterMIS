@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Admit Patient";
+    var hospitals = ViewBag.Hospitals as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>Admit Patient</h1><p>Register a new patient and assign a bed</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card" style="max-width:680px">
+    <form method="post" asp-action="Admit">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>First Name <span style="color:var(--accent-red)">*</span></label>
+                <input type="text" name="firstName" id="firstName" class="form-control" placeholder="e.g. Ahmed" required />
+            </div>
+            <div class="form-group">
+                <label>Last Name <span style="color:var(--accent-red)">*</span></label>
+                <input type="text" name="lastName" id="lastName" class="form-control" placeholder="e.g. Khan" required />
+            </div>
+            <div class="form-group">
+                <label>Patient Status <span style="color:var(--accent-red)">*</span></label>
+                <select name="status" id="patientStatus" class="form-control" required>
+                    <option value="Stable">Stable</option>
+                    <option value="Critical">Critical</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Hospital <span style="color:var(--accent-red)">*</span></label>
+                <select name="hospitalID" id="hospitalID" class="form-control" required>
+                    <option value="">— Select Hospital —</option>
+                    @if (hospitals != null)
+                    {
+                        foreach (System.Data.DataRow row in hospitals.Rows)
+                        {
+                            <option value="@row["HospitalID"]">
+                                @row["Name"] — @row["AvailableBeds"] beds available
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Bed Number <span style="color:var(--accent-red)">*</span></label>
+                <input type="number" name="bedNumber" id="bedNumber" class="form-control" min="1" placeholder="e.g. 12" required />
+            </div>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:10px">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-procedures"></i> Admit Patient</button>
+            <a asp-action="Patients" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

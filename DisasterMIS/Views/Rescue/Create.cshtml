@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Add Rescue Team";
+    var teamTypes = ViewBag.TeamTypes as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>Add Rescue Team</h1><p>Register a new rescue team</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card" style="max-width:640px">
+    <form method="post" asp-action="Create">
+        <div class="form-grid">
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Team Name <span style="color:var(--accent-red)">*</span></label>
+                <input type="text" name="teamName" id="teamName" class="form-control" placeholder="e.g. Alpha Search & Rescue" required />
+            </div>
+            <div class="form-group">
+                <label>Team Type <span style="color:var(--accent-red)">*</span></label>
+                <select name="teamTypeID" id="teamTypeID" class="form-control" required>
+                    <option value="">— Select Type —</option>
+                    @if (teamTypes != null)
+                    {
+                        foreach (System.Data.DataRow row in teamTypes.Rows)
+                        {
+                            <option value="@row["TeamTypeID"]">@row["TeamType"]</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Current Location</label>
+                <input type="text" name="currentLocation" id="currentLocation" class="form-control" placeholder="e.g. Lahore Base" />
+            </div>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:10px">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Team</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

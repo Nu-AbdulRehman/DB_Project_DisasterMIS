@@ -1,0 +1,100 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Data.SqlClient;
+using DisasterMIS.Data;
+
+namespace DisasterMIS.Controllers
+{
+    [Authorize]
+    public class FinancialController : Controller
+    {
+        public IActionResult Index(string category = "", string dateFrom = "", string dateTo = "")
+        {
+            string query = @"SELECT fr.TransactionID, fr.Amount, fr.Category, fr.Description,
+                fr.TransactionDate, de.DisasterType
+                FROM FinancialRecords fr
+                INNER JOIN DisasterEvents de ON fr.EventID = de.EventID
+                WHERE 1=1";
+
+            var parameters = new List<SqlParameter>();
+
+            if (!string.IsNullOrEmpty(category))
+            {
+                query += " AND fr.Category = @Category";
+                parameters.Add(new SqlParameter("@Category", category));
+            }
+            if (!string.IsNullOrEmpty(dateFrom))
+            {
+                query += " AND fr.TransactionDate >= @DateFrom";
+                parameters.Add(new SqlParameter("@DateFrom", dateFrom));
+            }
+            if (!string.IsNullOrEmpty(dateTo))
+            {
+                query += " AND fr.TransactionDate <= @DateTo";
+                parameters.Add(new SqlParameter("@DateTo", dateTo));
+            }
+
+            query += " ORDER BY fr.TransactionDate DESC";
+
+            ViewBag.Records = DbHelper.ExecuteQuery(query, parameters.ToArray());
+            ViewBag.DisasterEvents = DbHelper.ExecuteQuery("SELECT * FROM DisasterEvents");
+            ViewBag.TotalDonations = DbHelper.ExecuteScalar("SELECT ISNULL(SUM(Amount),0) FROM FinancialRecords WHERE Category = 'Donation'");
+            ViewBag.TotalExpenses = DbHelper.ExecuteScalar("SELECT ISNULL(SUM(Amount),0) FROM FinancialRecords WHERE Category IN ('Expense','Procurement')");
+            ViewBag.CategoryFilter = category;
+            ViewBag.DateFrom = dateFrom;
+            ViewBag.DateTo = dateTo;
+            return View();
+        }
+
+        [Authorize(Roles = "Administrator,Finance Officer")]
+        public IActionResult Create()
+        {
+            ViewBag.DisasterEvents = DbHelper.ExecuteQuery("SELECT * FROM DisasterEvents");
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Administrator,Finance Officer")]
+        public IActionResult Create(decimal amount, string category, string description, int eventID)
+        {
+            DbHelper.ExecuteNonQuery(
+                "INSERT INTO FinancialRecords (Amount, Category, Description, TransactionDate, EventID) VALUES (@Amount, @Category, @Description, GETDATE(), @EventID)",
+                new SqlParameter("@Amount", amount),
+                new SqlParameter("@Category", category),
+                new SqlParameter("@Description", description ?? (object)DBNull.Value),
+                new SqlParameter("@EventID", eventID));
+
+            TempData["Success"] = "Transaction recorded successfully.";
+            return RedirectToAction("Index");
+        }
+
+        [Authorize(Roles = "Administrator,Finance Officer")]
+        public IActionResult Delete(int id)
+        {
+            DbHelper.ExecuteNonQuery("DELETE FROM FinancialRecords WHERE TransactionID = @ID",
+                new SqlParameter("@ID", id));
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Summary()
+        {
+            ViewBag.ByCategoryData = DbHelper.ExecuteQuery(
+                "SELECT Category, SUM(Amount) AS Total, COUNT(*) AS Transactions FROM FinancialRecords GROUP BY Category");
+
+            ViewBag.ByEventData = DbHelper.ExecuteQuery(
+                @"SELECT de.DisasterType, fr.Category, SUM(fr.Amount) AS Total
+                FROM FinancialRecords fr
+                INNER JOIN DisasterEvents de ON fr.EventID = de.EventID
+                GROUP BY de.DisasterType, fr.Category
+                ORDER BY de.DisasterType");
+
+            ViewBag.MonthlyData = DbHelper.ExecuteQuery(
+                @"SELECT FORMAT(TransactionDate, 'yyyy-MM') AS Month, Category, SUM(Amount) AS Total
+                FROM FinancialRecords
+                GROUP BY FORMAT(TransactionDate, 'yyyy-MM'), Category
+                ORDER BY Month DESC");
+
+            return View();
+        }
+    }
+}

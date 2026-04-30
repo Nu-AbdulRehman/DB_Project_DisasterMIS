@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "Financial Summary";
+    var byCategory = ViewBag.ByCategoryData as System.Data.DataTable;
+    var byEvent    = ViewBag.ByEventData    as System.Data.DataTable;
+    var monthly    = ViewBag.MonthlyData    as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>Financial Summary</h1><p>Breakdown by category, event and month</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<!-- By Category -->
+<div class="charts-grid" style="margin-bottom:24px">
+    <div class="card">
+        <div class="card-title"><i class="fas fa-chart-pie" style="color:var(--accent-2)"></i> By Category</div>
+        <canvas id="catChart" height="220"></canvas>
+    </div>
+    <div class="card">
+        <div class="card-title"><i class="fas fa-table" style="color:var(--accent-3)"></i> Category Breakdown</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Category</th><th>Transactions</th><th>Total (PKR)</th></tr></thead>
+                <tbody>
+                    @if (byCategory != null)
+                    {
+                        foreach (System.Data.DataRow row in byCategory.Rows)
+                        {
+                            string cat = row["Category"].ToString().ToLower();
+                            <tr>
+                                <td><span class="badge badge-@cat">@row["Category"]</span></td>
+                                <td>@row["Transactions"]</td>
+                                <td style="font-weight:600">@(Convert.ToDecimal(row["Total"]).ToString("N0"))</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- By Event -->
+<p class="section-title" style="margin-top:0"><i class="fas fa-bolt"></i> By Disaster Event</p>
+<div class="card" style="margin-bottom:24px">
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Disaster Type</th><th>Category</th><th>Total (PKR)</th></tr></thead>
+            <tbody>
+                @if (byEvent != null && byEvent.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in byEvent.Rows)
+                    {
+                        string cat = row["Category"].ToString().ToLower();
+                        <tr>
+                            <td>@row["DisasterType"]</td>
+                            <td><span class="badge badge-@cat">@row["Category"]</span></td>
+                            <td style="font-weight:600">@(Convert.ToDecimal(row["Total"]).ToString("N0"))</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px">No data</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Monthly -->
+<p class="section-title"><i class="fas fa-calendar-alt"></i> Monthly Breakdown</p>
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Month</th><th>Category</th><th>Total (PKR)</th></tr></thead>
+            <tbody>
+                @if (monthly != null && monthly.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in monthly.Rows)
+                    {
+                        string cat = row["Category"].ToString().ToLower();
+                        <tr>
+                            <td style="font-weight:500">@row["Month"]</td>
+                            <td><span class="badge badge-@cat">@row["Category"]</span></td>
+                            <td style="font-weight:600">@(Convert.ToDecimal(row["Total"]).ToString("N0"))</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px">No data</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const catLabels = [@Html.Raw(string.Join(",", byCategory?.Rows.Cast<System.Data.DataRow>().Select(r => $"'{r["Category"]}'") ?? Enumerable.Empty<string>()))];
+const catTotals = [@Html.Raw(string.Join(",", byCategory?.Rows.Cast<System.Data.DataRow>().Select(r => r["Total"].ToString()) ?? Enumerable.Empty<string>()))];
+new Chart(document.getElementById('catChart'), {
+    type: 'doughnut',
+    data: {
+        labels: catLabels,
+        datasets: [{ data: catTotals, backgroundColor: ['#10b981','#ef4444','#3b82f6'], borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: {
+        plugins: { legend: { labels: { color: '#8b949e', font: { family: 'Inter' } } } }
+    }
+});
+</script>
+}

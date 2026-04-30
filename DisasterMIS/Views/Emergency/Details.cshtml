@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = "Emergency Details";
+    var report      = ViewBag.Report      as System.Data.DataRow;
+    var assignments = ViewBag.Assignments as System.Data.DataTable;
+    var allocations = ViewBag.Allocations as System.Data.DataTable;
+    string sev    = report?["SeverityLevel"].ToString() ?? "1";
+    string status = (report?["Status"].ToString() ?? "Pending").ToLower();
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-map-marker-alt" style="color:var(--accent)"></i> @report?["Location"]</h1>
+        <p>Report #@report?["ReportID"] &mdash; @report?["DisasterType"]</p>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <label>Status</label>
+            <span><span class="badge badge-@status">@report?["Status"]</span></span>
+        </div>
+        <div class="detail-item">
+            <label>Severity</label>
+            <span class="sev-@sev" style="font-size:20px;font-weight:700">Level @sev / 5</span>
+        </div>
+        <div class="detail-item">
+            <label>Reported By</label>
+            <span>@report?["ReportedBy"]</span>
+        </div>
+        <div class="detail-item">
+            <label>Report Time</label>
+            <span>@(Convert.ToDateTime(report?["ReportTime"]).ToString("dd MMM yyyy HH:mm"))</span>
+        </div>
+    </div>
+
+    @if (User.IsInRole("Administrator") || User.IsInRole("Emergency Operator"))
+    {
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+            <p class="section-title" style="margin-top:0">Update Status</p>
+            <form method="post" asp-action="UpdateStatus" style="display:flex;gap:10px;flex-wrap:wrap">
+                <input type="hidden" name="reportID" value="@report?["ReportID"]" />
+                <select name="status" class="form-control" style="width:auto">
+                    <option value="Pending">Pending</option>
+                    <option value="Active">Active</option>
+                    <option value="Resolved">Resolved</option>
+                </select>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update</button>
+            </form>
+        </div>
+    }
+</div>
+
+<!-- Rescue Assignments -->
+<p class="section-title"><i class="fas fa-helicopter"></i> Rescue Assignments</p>
+<div class="card" style="margin-bottom:20px">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Team</th><th>Type</th><th>Status</th><th>Assigned At</th><th>Completed At</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                @if (assignments != null && assignments.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in assignments.Rows)
+                    {
+                        string aStatus = row["Status"].ToString().ToLower();
+                        <tr>
+                            <td>@row["TeamName"]</td>
+                            <td>@row["TeamType"]</td>
+                            <td><span class="badge badge-@aStatus">@row["Status"]</span></td>
+                            <td style="color:var(--text-muted)">@(Convert.ToDateTime(row["AssignedAt"]).ToString("dd MMM HH:mm"))</td>
+                            <td style="color:var(--text-muted)">@(row["CompletedAt"] == DBNull.Value ? "—" : Convert.ToDateTime(row["CompletedAt"]).ToString("dd MMM HH:mm"))</td>
+                            <td style="color:var(--text-muted)">@(row["CompletionNotes"] == DBNull.Value ? "—" : row["CompletionNotes"])</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">No teams assigned yet</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Resource Allocations -->
+<p class="section-title"><i class="fas fa-boxes-stacked"></i> Resource Allocations</p>
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Resource</th><th>Type</th><th>Quantity</th><th>Status</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+                @if (allocations != null && allocations.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in allocations.Rows)
+                    {
+                        string aStatus = row["Status"].ToString().ToLower();
+                        <tr>
+                            <td>@row["ResourceName"]</td>
+                            <td>@row["ResourceType"]</td>
+                            <td><strong>@row["Quantity"]</strong></td>
+                            <td><span class="badge badge-@aStatus">@row["Status"]</span></td>
+                            <td style="color:var(--text-muted)">@(Convert.ToDateTime(row["AllocationDate"]).ToString("dd MMM HH:mm"))</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px">No resources allocated yet</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

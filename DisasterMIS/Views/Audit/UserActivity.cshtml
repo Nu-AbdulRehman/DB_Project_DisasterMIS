@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "User Activity";
+    var activity = ViewBag.Activity as System.Data.DataTable;
+    var userInfo = ViewBag.UserInfo as System.Data.DataTable;
+    var uRow     = userInfo?.Rows.Count > 0 ? userInfo.Rows[0] : null;
+}
+
+<div class="page-header">
+    <div>
+        <h1>User Activity</h1>
+        @if (uRow != null)
+        {
+            <p>@uRow["FullName"] &mdash; <span style="color:var(--accent)">@uRow["UserType"]</span> &mdash; @uRow["Email"]</p>
+        }
+    </div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Audit Log</a>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Action</th><th>Table</th><th>New Value</th><th>Timestamp</th></tr>
+            </thead>
+            <tbody>
+                @if (activity != null && activity.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in activity.Rows)
+                    {
+                        string action    = row["Action"].ToString().ToUpper();
+                        string actionCss = action == "INSERT" ? "badge-insert" : action == "UPDATE" ? "badge-update" : "badge-delete";
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["LogID"]</td>
+                            <td><span class="badge @actionCss">@action</span></td>
+                            <td style="font-size:12px;font-weight:600;color:var(--text-muted)">@row["AffectedTable"]</td>
+                            <td style="color:var(--text-muted);font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                @(row["NewValue"] == DBNull.Value ? "—" : row["NewValue"])
+                            </td>
+                            <td style="color:var(--text-muted);font-size:12px">@(Convert.ToDateTime(row["Timestamp"]).ToString("dd MMM yy HH:mm:ss"))</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">No activity recorded for this user</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

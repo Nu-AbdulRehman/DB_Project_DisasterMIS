@@ -1,0 +1,85 @@
+@{
+    ViewData["Title"] = "Resources & Inventory";
+    var resources = ViewBag.Resources as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Resources & Inventory</h1>
+        <p>Stock levels and resource management</p>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a asp-action="Allocate"    class="btn btn-primary"><i class="fas fa-share"></i> Allocate</a>
+        <a asp-action="Allocations" class="btn btn-secondary"><i class="fas fa-list"></i> Allocations</a>
+        <a asp-action="Warehouses"  class="btn btn-secondary"><i class="fas fa-warehouse"></i> Warehouses</a>
+        @if (User.IsInRole("Administrator") || User.IsInRole("Warehouse Manager"))
+        {
+            <a asp-action="AddResource" class="btn btn-secondary"><i class="fas fa-plus"></i> Add Resource</a>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Resource</th><th>Type</th><th>Stock</th><th>Threshold</th><th>Status</th><th>Stock Level</th>
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Warehouse Manager"))
+                    {
+                        <th>Update Stock</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (resources != null && resources.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in resources.Rows)
+                    {
+                        int stock     = Convert.ToInt32(row["StockLevel"]);
+                        int threshold = Convert.ToInt32(row["ThresholdLevel"]);
+                        bool isLow    = stock <= threshold;
+                        int pct       = threshold > 0 ? Math.Min(100, stock * 100 / (threshold * 2)) : 100;
+                        string barCss = pct < 30 ? "progress-red" : pct < 60 ? "progress-orange" : "progress-green";
+
+                        <tr>
+                            <td><strong>@row["ResourceName"]</strong></td>
+                            <td style="color:var(--text-muted)">@row["ResourceType"]</td>
+                            <td class="@(isLow ? "low-stock" : "")">@stock</td>
+                            <td style="color:var(--text-muted)">@threshold</td>
+                            <td>
+                                @if (isLow)
+                                {
+                                    <span class="badge badge-active"><i class="fas fa-exclamation-triangle"></i> Low Stock</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-available"><i class="fas fa-check"></i> OK</span>
+                                }
+                            </td>
+                            <td style="width:160px">
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill @barCss" style="width:@pct%"></div>
+                                </div>
+                            </td>
+                            @if (User.IsInRole("Administrator") || User.IsInRole("Warehouse Manager"))
+                            {
+                                <td>
+                                    <form method="post" asp-action="UpdateStock" style="display:flex;gap:6px;align-items:center">
+                                        <input type="hidden" name="resourceID" value="@row["ResourceID"]" />
+                                        <input type="number" name="additionalStock" class="form-control" style="width:80px;padding:5px 8px"
+                                               min="1" placeholder="Qty" required />
+                                        <button type="submit" class="btn btn-sm btn-success" title="Add stock"><i class="fas fa-plus"></i></button>
+                                    </form>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">No resources found</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

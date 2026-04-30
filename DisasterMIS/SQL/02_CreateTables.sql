@@ -1,0 +1,192 @@
+USE DisasterMIS;
+GO
+
+CREATE TABLE UserTypes
+(
+    UserTypeID INT PRIMARY KEY IDENTITY,
+    UserType NVARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Users
+(
+    UserID INT PRIMARY KEY IDENTITY,
+    FullName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL UNIQUE,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1,
+    UserTypeID INT NOT NULL,
+    FOREIGN KEY (UserTypeID) REFERENCES UserTypes(UserTypeID)
+);
+
+CREATE TABLE DisasterEvents
+(
+    EventID INT PRIMARY KEY IDENTITY,
+    DisasterType NVARCHAR(50) NOT NULL
+);
+
+CREATE TABLE EmergencyReports
+(
+    ReportID INT PRIMARY KEY IDENTITY,
+    Location NVARCHAR(200) NOT NULL,
+    SeverityLevel INT NOT NULL CHECK (SeverityLevel BETWEEN 1 AND 5),
+    Status NVARCHAR(30) NOT NULL DEFAULT 'Pending',
+    ReportTime DATETIME2 NOT NULL DEFAULT GETDATE(),
+    EventID INT NOT NULL,
+    UserID INT NOT NULL,
+    FOREIGN KEY (EventID) REFERENCES DisasterEvents(EventID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+CREATE TABLE TeamTypes
+(
+    TeamTypeID INT PRIMARY KEY IDENTITY,
+    TeamType NVARCHAR(50) NOT NULL
+);
+
+CREATE TABLE RescueTeams
+(
+    TeamID INT PRIMARY KEY IDENTITY,
+    TeamName NVARCHAR(100) NOT NULL,
+    CurrentLocation NVARCHAR(200),
+    AvailabilityStatus NVARCHAR(30) NOT NULL DEFAULT 'Available',
+    TeamTypeID INT NOT NULL,
+    FOREIGN KEY (TeamTypeID) REFERENCES TeamTypes(TeamTypeID)
+);
+
+CREATE TABLE RescueAssignments
+(
+    AssignmentID INT IDENTITY,
+    ReportID INT NOT NULL,
+    TeamID INT NOT NULL,
+    AssignedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    CompletedAt DATETIME2,
+    Status NVARCHAR(30) NOT NULL DEFAULT 'Assigned',
+    CompletionNotes NVARCHAR(500),
+    PRIMARY KEY (AssignmentID, ReportID, TeamID),
+    FOREIGN KEY (ReportID) REFERENCES EmergencyReports(ReportID),
+    FOREIGN KEY (TeamID) REFERENCES RescueTeams(TeamID)
+);
+
+CREATE TABLE ResourceTypes
+(
+    ResourceTypeID INT PRIMARY KEY IDENTITY,
+    ResourceType NVARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Resources
+(
+    ResourceID INT PRIMARY KEY IDENTITY,
+    ResourceName NVARCHAR(100) NOT NULL,
+    StockLevel INT NOT NULL DEFAULT 0 CHECK (StockLevel >= 0),
+    ThresholdLevel INT NOT NULL DEFAULT 10,
+    ResourceTypeID INT NOT NULL,
+    FOREIGN KEY (ResourceTypeID) REFERENCES ResourceTypes(ResourceTypeID)
+);
+
+CREATE TABLE Warehouses
+(
+    WarehouseID INT PRIMARY KEY IDENTITY,
+    Name NVARCHAR(100) NOT NULL,
+    Location NVARCHAR(200) NOT NULL
+);
+
+CREATE TABLE WarehouseStock
+(
+    WarehouseID INT NOT NULL,
+    ResourceID INT NOT NULL,
+    Stock INT NOT NULL DEFAULT 0 CHECK (Stock >= 0),
+    PRIMARY KEY (WarehouseID, ResourceID),
+    FOREIGN KEY (WarehouseID) REFERENCES Warehouses(WarehouseID),
+    FOREIGN KEY (ResourceID) REFERENCES Resources(ResourceID)
+);
+
+CREATE TABLE ResourceAllocations
+(
+    AllocationID INT IDENTITY,
+    ResourceID INT NOT NULL,
+    ReportID INT NOT NULL,
+    Quantity INT NOT NULL CHECK (Quantity > 0),
+    Status NVARCHAR(30) NOT NULL DEFAULT 'Pending',
+    AllocationDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+    PRIMARY KEY (AllocationID, ResourceID, ReportID),
+    FOREIGN KEY (ResourceID) REFERENCES Resources(ResourceID),
+    FOREIGN KEY (ReportID) REFERENCES EmergencyReports(ReportID)
+);
+
+CREATE TABLE Hospitals
+(
+    HospitalID INT PRIMARY KEY IDENTITY,
+    Name NVARCHAR(100) NOT NULL,
+    Location NVARCHAR(200) NOT NULL,
+    TotalBeds INT NOT NULL CHECK (TotalBeds >= 0)
+);
+
+CREATE TABLE Patients
+(
+    PatientID INT PRIMARY KEY IDENTITY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    Status NVARCHAR(30) NOT NULL DEFAULT 'Stable'
+);
+
+CREATE TABLE Admits
+(
+    HospitalID INT NOT NULL,
+    PatientID INT NOT NULL,
+    BedNumber INT NOT NULL,
+    AdmissionDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+    PRIMARY KEY (HospitalID, PatientID),
+    FOREIGN KEY (HospitalID) REFERENCES Hospitals(HospitalID),
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+);
+
+CREATE TABLE FinancialRecords
+(
+    TransactionID INT PRIMARY KEY IDENTITY,
+    Amount DECIMAL(18,2) NOT NULL,
+    Category NVARCHAR(50) NOT NULL,
+    Description NVARCHAR(500),
+    TransactionDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+    EventID INT NOT NULL,
+    FOREIGN KEY (EventID) REFERENCES DisasterEvents(EventID)
+);
+
+CREATE TABLE RequestTypes
+(
+    RequestTypeID INT PRIMARY KEY IDENTITY,
+    RequestType NVARCHAR(50) NOT NULL
+);
+
+CREATE TABLE ApprovalWorkflow
+(
+    ApprovalID INT IDENTITY,
+    RequesterID INT NOT NULL,
+    ApproverID INT,
+    RequestTypeID INT NOT NULL,
+    AllocationID INT,
+    Status NVARCHAR(30) NOT NULL DEFAULT 'Pending',
+    Notes NVARCHAR(500),
+    PRIMARY KEY (ApprovalID, RequesterID),
+    FOREIGN KEY (RequesterID) REFERENCES Users(UserID),
+    FOREIGN KEY (ApproverID) REFERENCES Users(UserID),
+    FOREIGN KEY (RequestTypeID) REFERENCES RequestTypes(RequestTypeID)
+);
+
+CREATE TABLE Tables
+(
+    TableID INT PRIMARY KEY IDENTITY,
+    AffectedTable NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE AuditLog
+(
+    LogID INT PRIMARY KEY IDENTITY,
+    UserID INT NOT NULL,
+    TableID INT NOT NULL,
+    Action NVARCHAR(50) NOT NULL,
+    OldValue NVARCHAR(MAX),
+    NewValue NVARCHAR(MAX),
+    Timestamp DATETIME2 NOT NULL DEFAULT GETDATE(),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    FOREIGN KEY (TableID) REFERENCES Tables(TableID)
+);

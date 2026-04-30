@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Allocate Resource";
+    var resources = ViewBag.Resources as System.Data.DataTable;
+    var reports   = ViewBag.Reports   as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>Allocate Resource</h1><p>Dispatch resources to an active emergency</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card" style="max-width:680px">
+    <form method="post" asp-action="Allocate">
+        <div class="form-grid">
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Emergency Report <span style="color:var(--accent-red)">*</span></label>
+                <select name="reportID" id="reportID" class="form-control" required>
+                    <option value="">— Select Emergency —</option>
+                    @if (reports != null)
+                    {
+                        foreach (System.Data.DataRow row in reports.Rows)
+                        {
+                            <option value="@row["ReportID"]">
+                                #@row["ReportID"] — @row["Location"] (@row["DisasterType"], Sev @row["SeverityLevel"])
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Resource <span style="color:var(--accent-red)">*</span></label>
+                <select name="resourceID" id="resourceID" class="form-control" required>
+                    <option value="">— Select Resource —</option>
+                    @if (resources != null)
+                    {
+                        foreach (System.Data.DataRow row in resources.Rows)
+                        {
+                            <option value="@row["ResourceID"]">
+                                @row["ResourceName"] (@row["ResourceType"]) — Stock: @row["StockLevel"]
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantity <span style="color:var(--accent-red)">*</span></label>
+                <input type="number" name="quantity" id="quantity" class="form-control" min="1" placeholder="e.g. 50" required />
+            </div>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:10px">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-share"></i> Allocate</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

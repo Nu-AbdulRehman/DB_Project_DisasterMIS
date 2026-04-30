@@ -1,0 +1,145 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = DisasterMIS
+build_property.RootNamespace = DisasterMIS
+build_property.ProjectDir = C:\Users\mabdu\OneDrive\Documents\University-Documents\Assignments\Semester_4\DB\DB_Project\Project_Repo\DB_Project_DisasterMIS\DisasterMIS\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\mabdu\OneDrive\Documents\University-Documents\Assignments\Semester_4\DB\DB_Project\Project_Repo\DB_Project_DisasterMIS\DisasterMIS
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Approval/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXBwcm92YWxcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Approval/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXBwcm92YWxcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Audit/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Audit/UserActivity.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRcVXNlckFjdGl2aXR5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Dashboard/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGFzaGJvYXJkXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Emergency/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1lcmdlbmN5XENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Emergency/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1lcmdlbmN5XERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Emergency/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1lcmdlbmN5XEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Financial/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmluYW5jaWFsXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Financial/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmluYW5jaWFsXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Financial/Summary.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmluYW5jaWFsXFN1bW1hcnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Hospital/Admit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9zcGl0YWxcQWRtaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Hospital/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9zcGl0YWxcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Hospital/Patients.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9zcGl0YWxcUGF0aWVudHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Rescue/Assign.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzY3VlXEFzc2lnbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Rescue/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzY3VlXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Rescue/History.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzY3VlXEhpc3RvcnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Rescue/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzY3VlXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Resource/AddResource.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzb3VyY2VcQWRkUmVzb3VyY2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Resource/Allocate.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzb3VyY2VcQWxsb2NhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Resource/Allocations.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzb3VyY2VcQWxsb2NhdGlvbnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Resource/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzb3VyY2VcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Resource/Warehouses.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzb3VyY2VcV2FyZWhvdXNlcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mabdu/OneDrive/Documents/University-Documents/Assignments/Semester_4/DB/DB_Project/Project_Repo/DB_Project_DisasterMIS/DisasterMIS/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-2kjdkhvv2p

@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "Assignment History";
+    var history = ViewBag.History as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>Assignment History</h1><p>Complete record of all rescue operations</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Team</th><th>Type</th><th>Location</th><th>Sev</th><th>Status</th><th>Assigned</th><th>Completed</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                @if (history != null && history.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in history.Rows)
+                    {
+                        string sev = row["SeverityLevel"].ToString();
+                        string st  = row["Status"].ToString().ToLower();
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["AssignmentID"]</td>
+                            <td><strong>@row["TeamName"]</strong></td>
+                            <td style="color:var(--text-muted)">@row["TeamType"]</td>
+                            <td>@row["Location"]</td>
+                            <td><span class="sev-@sev">@sev/5</span></td>
+                            <td><span class="badge badge-@st">@row["Status"]</span></td>
+                            <td style="color:var(--text-muted);font-size:12px">@(Convert.ToDateTime(row["AssignedAt"]).ToString("dd MMM yy HH:mm"))</td>
+                            <td style="color:var(--text-muted);font-size:12px">@(row["CompletedAt"] == DBNull.Value ? "—" : Convert.ToDateTime(row["CompletedAt"]).ToString("dd MMM yy HH:mm"))</td>
+                            <td style="color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@(row["CompletionNotes"] == DBNull.Value ? "—" : row["CompletionNotes"])</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:40px">No assignment history yet</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

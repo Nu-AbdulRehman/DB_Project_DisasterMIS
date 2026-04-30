@@ -1,0 +1,100 @@
+@{
+    ViewData["Title"] = "Emergency Reports";
+    var reports = ViewBag.Reports as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Emergency Reports</h1>
+        <p>Monitor and manage all active disaster reports</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> New Report</a>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom:20px">
+    <form method="get" class="filter-bar">
+        <div class="form-group">
+            <label>Location</label>
+            <input type="text" name="location" class="form-control" placeholder="Search location..." value="@ViewBag.Location" />
+        </div>
+        <div class="form-group">
+            <label>Status</label>
+            <select name="status" class="form-control">
+                <option value="">All Statuses</option>
+                <option value="Pending" selected="@(ViewBag.Status == "Pending" ? "selected" : null)">Pending</option>
+                <option value="Active" selected="@(ViewBag.Status == "Active" ? "selected" : null)">Active</option>
+                <option value="Resolved" selected="@(ViewBag.Status == "Resolved" ? "selected" : null)">Resolved</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Severity</label>
+            <select name="severity" class="form-control">
+                <option value="0">All Levels</option>
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <option value="@i" selected="@(ViewBag.Severity == i ? "selected" : null)">Level @i</option>
+                }
+            </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
+            <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-times"></i> Clear</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Location</th>
+                    <th>Disaster Type</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Reported By</th>
+                    <th>Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (reports != null && reports.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in reports.Rows)
+                    {
+                        string sev = row["SeverityLevel"].ToString();
+                        string status = row["Status"].ToString().ToLower();
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["ReportID"]</td>
+                            <td><i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:6px"></i>@row["Location"]</td>
+                            <td>@row["DisasterType"]</td>
+                            <td><span class="sev-@sev" style="font-weight:600"><i class="fas fa-circle" style="font-size:8px"></i> @sev / 5</span></td>
+                            <td><span class="badge badge-@status">@row["Status"]</span></td>
+                            <td style="color:var(--text-muted)">@row["ReportedBy"]</td>
+                            <td style="color:var(--text-muted);font-size:12px">@(Convert.ToDateTime(row["ReportTime"]).ToString("dd MMM yy HH:mm"))</td>
+                            <td>
+                                <div style="display:flex;gap:6px">
+                                    <a asp-action="Details" asp-route-id="@row["ReportID"]" class="btn btn-sm btn-secondary" title="View"><i class="fas fa-eye"></i></a>
+                                    @if (User.IsInRole("Administrator"))
+                                    {
+                                        <a asp-action="Delete" asp-route-id="@row["ReportID"]" class="btn btn-sm btn-danger" title="Delete"
+                                           onclick="return confirm('Delete this report?')"><i class="fas fa-trash"></i></a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:40px">
+                        <i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i>
+                        No emergency reports found
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,15 @@
+USE master;
+GO
+
+IF EXISTS (SELECT name FROM sys.databases WHERE name = 'DisasterMIS')
+BEGIN
+    ALTER DATABASE DisasterMIS SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE DisasterMIS;
+END
+GO
+
+CREATE DATABASE DisasterMIS;
+GO
+
+USE DisasterMIS;
+GO

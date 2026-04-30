@@ -1,0 +1,120 @@
+@{
+    ViewData["Title"] = "Financial Records";
+    var records = ViewBag.Records as System.Data.DataTable;
+
+    string FormatNum(object val) {
+        if (val == null) return "0";
+        decimal n = Convert.ToDecimal(val);
+        if (n >= 1_000_000_000) return $"{n/1_000_000_000:0.#}B";
+        if (n >= 1_000_000)     return $"{n/1_000_000:0.#}M";
+        if (n >= 1_000)         return $"{n/1_000:0.#}k";
+        return $"{n:0}";
+    }
+}
+
+<div class="page-header">
+    <div>
+        <h1>Financial Records</h1>
+        <p>Donations, expenses and procurement transactions</p>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a asp-action="Summary" class="btn btn-secondary"><i class="fas fa-chart-pie"></i> Summary</a>
+        @if (User.IsInRole("Administrator") || User.IsInRole("Finance Officer"))
+        {
+            <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> Add Transaction</a>
+        }
+    </div>
+</div>
+
+<!-- KPI row -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px">
+    <div class="kpi-card">
+        <div class="kpi-icon green"><i class="fas fa-hand-holding-heart"></i></div>
+        <div>
+            <div class="kpi-value">PKR @FormatNum(ViewBag.TotalDonations)</div>
+            <div class="kpi-label">Total Donations</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon red"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div>
+            <div class="kpi-value">PKR @FormatNum(ViewBag.TotalExpenses)</div>
+            <div class="kpi-label">Total Expenses</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom:20px">
+    <form method="get" class="filter-bar">
+        <div class="form-group">
+            <label>Category</label>
+            <select name="category" class="form-control">
+                <option value="">All Categories</option>
+                <option value="Donation"    selected="@(ViewBag.CategoryFilter == "Donation"    ? "selected" : null)">Donation</option>
+                <option value="Expense"     selected="@(ViewBag.CategoryFilter == "Expense"     ? "selected" : null)">Expense</option>
+                <option value="Procurement" selected="@(ViewBag.CategoryFilter == "Procurement" ? "selected" : null)">Procurement</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>From Date</label>
+            <input type="date" name="dateFrom" class="form-control" value="@ViewBag.DateFrom" />
+        </div>
+        <div class="form-group">
+            <label>To Date</label>
+            <input type="date" name="dateTo" class="form-control" value="@ViewBag.DateTo" />
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
+            <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-times"></i> Clear</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Category</th><th>Amount (PKR)</th><th>Disaster Event</th><th>Description</th><th>Date</th>
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Finance Officer"))
+                    { <th></th> }
+                </tr>
+            </thead>
+            <tbody>
+                @if (records != null && records.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in records.Rows)
+                    {
+                        string cat = row["Category"].ToString().ToLower();
+                        decimal rawAmt = Convert.ToDecimal(row["Amount"]);
+                        string amt = FormatNum(rawAmt);
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["TransactionID"]</td>
+                            <td><span class="badge badge-@cat">@row["Category"]</span></td>
+                            <td style="font-weight:600;font-size:15px">@amt</td>
+                            <td style="color:var(--text-muted)">@row["DisasterType"]</td>
+                            <td style="color:var(--text-muted);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                @(row["Description"] == DBNull.Value ? "—" : row["Description"])
+                            </td>
+                            <td style="color:var(--text-muted);font-size:12px">@(Convert.ToDateTime(row["TransactionDate"]).ToString("dd MMM yy HH:mm"))</td>
+                            @if (User.IsInRole("Administrator") || User.IsInRole("Finance Officer"))
+                            {
+                                <td>
+                                    <a asp-action="Delete" asp-route-id="@row["TransactionID"]" class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Delete this transaction?')"><i class="fas fa-trash"></i></a>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">
+                        <i class="fas fa-coins" style="font-size:32px;display:block;margin-bottom:12px;opacity:.3"></i>
+                        No financial records found
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

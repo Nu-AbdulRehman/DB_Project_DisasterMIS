@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Smart Disaster Response Management Information System" />
+    <title>@ViewData["Title"] — DisasterMIS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">DisasterMIS</span>
+                    <span class="brand-sub">Response System</span>
+                </div>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="user-avatar">@(User.Identity.Name?.Substring(0,1).ToUpper())</div>
+                <div class="user-info">
+                    <span class="user-name">@User.Identity.Name</span>
+                    <span class="user-role">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a asp-controller="Dashboard" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+                </a>
+                <a asp-controller="Emergency" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Emergency" ? "active" : "")">
+                    <i class="fas fa-exclamation-triangle"></i><span>Emergencies</span>
+                </a>
+                <a asp-controller="Rescue" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Rescue" ? "active" : "")">
+                    <i class="fas fa-helicopter"></i><span>Rescue Teams</span>
+                </a>
+                <a asp-controller="Resource" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Resource" ? "active" : "")">
+                    <i class="fas fa-boxes-stacked"></i><span>Resources</span>
+                </a>
+                <a asp-controller="Hospital" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Hospital" ? "active" : "")">
+                    <i class="fas fa-hospital"></i><span>Hospitals</span>
+                </a>
+                <a asp-controller="Financial" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Financial" ? "active" : "")">
+                    <i class="fas fa-coins"></i><span>Finance</span>
+                </a>
+                <a asp-controller="Approval" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Approval" ? "active" : "")">
+                    <i class="fas fa-check-circle"></i><span>Approvals</span>
+                </a>
+                @if (User.IsInRole("Administrator"))
+                {
+                    <a asp-controller="Audit" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Audit" ? "active" : "")">
+                        <i class="fas fa-history"></i><span>Audit Logs</span>
+                    </a>
+                }
+            </nav>
+
+            <div class="sidebar-footer">
+                <a asp-controller="Account" asp-action="Logout" class="nav-item logout-btn">
+                    <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-title">@ViewData["Title"]</div>
+                <div class="topbar-right">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="toast-alert toast-success" id="toastAlert">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="toast-alert toast-error" id="toastAlert">
+                            <i class="fas fa-times-circle"></i> @TempData["Error"]
+                        </div>
+                    }
+                </div>
+            </header>
+
+            <main class="page-content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    @RenderBody()
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Auto-dismiss toasts
+    setTimeout(() => {
+        const t = document.getElementById('toastAlert');
+        if (t) { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }
+    }, 4000);
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

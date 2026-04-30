@@ -1,0 +1,137 @@
+@{
+    ViewData["Title"] = "Rescue Teams";
+    var teams       = ViewBag.Teams       as System.Data.DataTable;
+    var assignments = ViewBag.Assignments as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Rescue Teams</h1>
+        <p>Team availability and active assignments</p>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a asp-action="Assign" class="btn btn-primary"><i class="fas fa-plus"></i> Assign Team</a>
+        <a asp-action="Create" class="btn btn-secondary"><i class="fas fa-users"></i> Add Team</a>
+        <a asp-action="History" class="btn btn-secondary"><i class="fas fa-history"></i> History</a>
+    </div>
+</div>
+
+<!-- Team Cards -->
+<p class="section-title" style="margin-top:0"><i class="fas fa-id-badge"></i> All Teams</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px">
+    @if (teams != null && teams.Rows.Count > 0)
+    {
+        foreach (System.Data.DataRow row in teams.Rows)
+        {
+            string avail   = row["AvailabilityStatus"].ToString();
+            string availLow = avail.ToLower().Replace(" ", "");
+            string badgeCss = availLow == "available"  ? "badge-available"
+                            : availLow == "assigned"   ? "badge-assigned"
+                            : availLow == "busy"       ? "badge-active"
+                            : "badge-unavailable";
+            <div class="card" style="padding:20px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+                    <div style="font-weight:600;font-size:15px">@row["TeamName"]</div>
+                    <span class="badge @badgeCss">@avail</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">
+                    <i class="fas fa-tag" style="margin-right:6px"></i>@row["TeamType"]
+                </div>
+                <div style="font-size:12px;color:var(--text-muted)">
+                    <i class="fas fa-map-marker-alt" style="margin-right:6px;color:var(--accent)"></i>
+                    @(row["CurrentLocation"] == DBNull.Value ? "Location unknown" : row["CurrentLocation"])
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="card" style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px">
+            No teams registered
+        </div>
+    }
+</div>
+
+<!-- Active Assignments -->
+<p class="section-title"><i class="fas fa-tasks"></i> Active Assignments</p>
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Team</th><th>Location</th><th>Severity</th><th>Status</th><th>Assigned At</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                @if (assignments != null && assignments.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in assignments.Rows)
+                    {
+                        string sev     = row["SeverityLevel"].ToString();
+                        string aStatus = row["Status"].ToString();
+                        string aStatusCss = aStatus.ToLower().Replace(" ", "-");
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["AssignmentID"]</td>
+                            <td><strong>@row["TeamName"]</strong></td>
+                            <td><i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:5px"></i>@row["Location"]</td>
+                            <td><span class="sev-@sev">@sev/5</span></td>
+                            <td><span class="badge badge-@aStatusCss">@aStatus</span></td>
+                            <td style="color:var(--text-muted)">@(Convert.ToDateTime(row["AssignedAt"]).ToString("dd MMM HH:mm"))</td>
+                            <td>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                @if (User.IsInRole("Administrator") || User.IsInRole("Field Officer"))
+                                {
+                                    @* Deploy: Assigned → Busy (field officer confirms team has left) *@
+                                    @if (aStatus == "Assigned")
+                                    {
+                                        <form method="post" asp-action="MarkBusy">
+                                            <input type="hidden" name="assignmentID" value="@row["AssignmentID"]" />
+                                            <input type="hidden" name="reportID"     value="@row["ReportID"]" />
+                                            <input type="hidden" name="teamID"       value="@row["TeamID"]" />
+                                            <button type="submit" class="btn btn-sm btn-secondary">
+                                                <i class="fas fa-truck-moving"></i> Deploy
+                                            </button>
+                                        </form>
+                                    }
+                                    @* Complete: available once Assigned or In Progress *@
+                                    @if (aStatus == "Assigned" || aStatus == "In Progress")
+                                    {
+                                        <button class="btn btn-sm btn-success"
+                                            onclick="document.getElementById('completeModal_@row["AssignmentID"]').style.display='flex'">
+                                            <i class="fas fa-check"></i> Complete
+                                        </button>
+                                        <div id="completeModal_@row["AssignmentID"]" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center">
+                                            <div class="card" style="width:420px;max-width:90vw">
+                                                <div class="card-title">Complete Assignment #@row["AssignmentID"]</div>
+                                                <form method="post" asp-action="Complete">
+                                                    <input type="hidden" name="assignmentID" value="@row["AssignmentID"]" />
+                                                    <input type="hidden" name="reportID"     value="@row["ReportID"]" />
+                                                    <input type="hidden" name="teamID"       value="@row["TeamID"]" />
+                                                    <div class="form-group">
+                                                        <label>Completion Notes</label>
+                                                        <textarea name="completionNotes" class="form-control" placeholder="Describe outcome..."></textarea>
+                                                    </div>
+                                                    <div style="display:flex;gap:10px;margin-top:16px">
+                                                        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Confirm</button>
+                                                        <button type="button" class="btn btn-secondary"
+                                                            onclick="document.getElementById('completeModal_@row["AssignmentID"]').style.display='none'">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">
+                        <i class="fas fa-check-circle" style="font-size:28px;display:block;margin-bottom:10px;color:var(--accent-3);opacity:.5"></i>
+                        No active assignments
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,53 @@
+@{
+    ViewData["Title"] = "New Approval Request";
+    var requestTypes       = ViewBag.RequestTypes       as System.Data.DataTable;
+    var pendingAllocations = ViewBag.PendingAllocations as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>New Approval Request</h1><p>Submit a request for Administrator review</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card" style="max-width:680px">
+    <form method="post" asp-action="Create">
+        <div class="form-grid">
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Request Type <span style="color:var(--accent-red)">*</span></label>
+                <select name="requestTypeID" id="requestTypeID" class="form-control" required>
+                    <option value="">— Select Type —</option>
+                    @if (requestTypes != null)
+                    {
+                        foreach (System.Data.DataRow row in requestTypes.Rows)
+                        {
+                            <option value="@row["RequestTypeID"]">@row["RequestType"]</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Related Allocation (Optional)</label>
+                <select name="allocationID" id="allocationID" class="form-control">
+                    <option value="">— None —</option>
+                    @if (pendingAllocations != null)
+                    {
+                        foreach (System.Data.DataRow row in pendingAllocations.Rows)
+                        {
+                            <option value="@row["AllocationID"]">
+                                #@row["AllocationID"] — @row["ResourceName"] x@row["Quantity"] → @row["Location"]
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Notes / Justification</label>
+                <textarea name="notes" id="notes" class="form-control" placeholder="Explain why this request is needed..."></textarea>
+            </div>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:10px">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Request</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

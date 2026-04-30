@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Resource Allocations";
+    var allocations = ViewBag.Allocations as System.Data.DataTable;
+}
+
+<div class="page-header">
+    <div><h1>Resource Allocations</h1><p>All dispatched resources to emergencies</p></div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Resource</th><th>Type</th><th>Emergency</th><th>Severity</th><th>Qty</th><th>Status</th><th>Date</th><th></th></tr>
+            </thead>
+            <tbody>
+                @if (allocations != null && allocations.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in allocations.Rows)
+                    {
+                        string sev    = row["SeverityLevel"].ToString();
+                        string st     = row["Status"].ToString();
+                        string stCss  = st.ToLower();
+                        bool canConsume = (st == "Dispatched" || st == "Delivered") &&
+                                         (User.IsInRole("Administrator") || User.IsInRole("Warehouse Manager") || User.IsInRole("Field Officer"));
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["AllocationID"]</td>
+                            <td><strong>@row["ResourceName"]</strong></td>
+                            <td style="color:var(--text-muted)">@row["ResourceType"]</td>
+                            <td><i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:5px"></i>@row["Location"]</td>
+                            <td><span class="sev-@sev">@sev/5</span></td>
+                            <td><strong>@row["Quantity"]</strong></td>
+                            <td><span class="badge badge-@stCss">@st</span></td>
+                            <td style="color:var(--text-muted);font-size:12px">@(Convert.ToDateTime(row["AllocationDate"]).ToString("dd MMM yy HH:mm"))</td>
+                            <td>
+                                @if (canConsume)
+                                {
+                                    <form method="post" asp-action="ConsumeResource"
+                                          onsubmit="return confirm('Mark this resource as consumed?')">
+                                        <input type="hidden" name="allocationID" value="@row["AllocationID"]" />
+                                        <input type="hidden" name="resourceID"   value="@row["ResourceID"]" />
+                                        <input type="hidden" name="reportID"     value="@row["ReportID"]" />
+                                        <button type="submit" class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-box-open"></i> Consume
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:40px">No allocations yet</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

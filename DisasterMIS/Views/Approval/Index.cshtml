@@ -1,0 +1,101 @@
+@{
+    ViewData["Title"] = "Approval Workflow";
+    var approvals     = ViewBag.Approvals     as System.Data.DataTable;
+    var requestTypes  = ViewBag.RequestTypes  as System.Data.DataTable;
+    string statusFilter = ViewBag.StatusFilter ?? "Pending";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Approval Workflow</h1>
+        <p>Request approvals and decisions</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> New Request</a>
+</div>
+
+<!-- Status tabs -->
+<div style="display:flex;gap:8px;margin-bottom:20px">
+    @foreach (var s in new[] { "Pending", "Approved", "Rejected" })
+    {
+        string isActive = statusFilter == s ? "btn-primary" : "btn-secondary";
+        <a asp-action="Index" asp-route-status="@s" class="btn @isActive">@s</a>
+    }
+    <a asp-action="Index" asp-route-status="" class="btn @(string.IsNullOrEmpty(statusFilter) ? "btn-primary" : "btn-secondary")">All</a>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Request Type</th><th>Requester</th><th>Status</th><th>Approver</th><th>Notes</th>
+                    @if (User.IsInRole("Administrator")) { <th>Action</th> }
+                </tr>
+            </thead>
+            <tbody>
+                @if (approvals != null && approvals.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in approvals.Rows)
+                    {
+                        string st = row["Status"].ToString().ToLower();
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:12px">@row["ApprovalID"]</td>
+                            <td><strong>@row["RequestType"]</strong></td>
+                            <td>@row["RequesterName"]</td>
+                            <td><span class="badge badge-@st">@row["Status"]</span></td>
+                            <td style="color:var(--text-muted)">@(row["ApproverName"] == DBNull.Value ? "—" : row["ApproverName"])</td>
+                            <td style="color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                @(row["Notes"] == DBNull.Value ? "—" : row["Notes"])
+                            </td>
+                            @if (User.IsInRole("Administrator"))
+                            {
+                                <td>
+                                    @if (row["Status"].ToString() == "Pending")
+                                    {
+                                        <button class="btn btn-sm btn-success"
+                                            onclick="document.getElementById('approveModal_@row["ApprovalID"]').style.display='flex'">
+                                            <i class="fas fa-gavel"></i> Decide
+                                        </button>
+                                        <!-- Decision Modal -->
+                                        <div id="approveModal_@row["ApprovalID"]" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center">
+                                            <div class="card" style="width:440px;max-width:90vw">
+                                                <div class="card-title">Process Request #@row["ApprovalID"]</div>
+                                                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+                                                    <strong>@row["RequestType"]</strong> by @row["RequesterName"]
+                                                </p>
+                                                <form method="post" asp-action="Process">
+                                                    <input type="hidden" name="approvalID"   value="@row["ApprovalID"]" />
+                                                    <input type="hidden" name="requesterID"  value="@row["RequesterID"]" />
+                                                    <div class="form-group" style="margin-bottom:16px">
+                                                        <label>Decision Notes</label>
+                                                        <textarea name="notes" class="form-control" placeholder="Reason for decision..."></textarea>
+                                                    </div>
+                                                    <div style="display:flex;gap:10px">
+                                                        <button type="submit" name="action" value="Approve" class="btn btn-success"><i class="fas fa-check"></i> Approve</button>
+                                                        <button type="submit" name="action" value="Reject"  class="btn btn-danger"><i class="fas fa-times"></i> Reject</button>
+                                                        <button type="button" class="btn btn-secondary"
+                                                            onclick="document.getElementById('approveModal_@row["ApprovalID"]').style.display='none'">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--text-muted);font-size:12px">—</span>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">
+                        <i class="fas fa-check-double" style="font-size:32px;display:block;margin-bottom:12px;opacity:.3"></i>
+                        No @statusFilter.ToLower() requests
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

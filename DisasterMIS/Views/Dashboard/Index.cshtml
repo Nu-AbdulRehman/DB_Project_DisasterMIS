@@ -1,0 +1,201 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    var severityData  = ViewBag.SeverityData  as System.Data.DataTable;
+    var categoryData  = ViewBag.CategoryData  as System.Data.DataTable;
+    var disasterData  = ViewBag.DisasterData  as System.Data.DataTable;
+    var recentReports = ViewBag.RecentReports as System.Data.DataTable;
+
+    // Compact number formatter: 1500 → 1.5k, 1200000 → 1.2M
+    string FormatNum(object val) {
+        if (val == null) return "0";
+        decimal n = Convert.ToDecimal(val);
+        if (n >= 1_000_000_000) return $"{n/1_000_000_000:0.#}B";
+        if (n >= 1_000_000)     return $"{n/1_000_000:0.#}M";
+        if (n >= 1_000)         return $"{n/1_000:0.#}k";
+        return $"{n:0}";
+    }
+}
+
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Overview of disaster response operations</p>
+    </div>
+    <span style="font-size:12px;color:var(--text-muted)">
+        <i class="fas fa-clock"></i> @DateTime.Now.ToString("ddd, dd MMM yyyy HH:mm")
+    </span>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon orange"><i class="fas fa-exclamation-triangle"></i></div>
+        <div>
+            <div class="kpi-value">@ViewBag.EmergencyCount</div>
+            <div class="kpi-label">Active Emergencies</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon blue"><i class="fas fa-helicopter"></i></div>
+        <div>
+            <div class="kpi-value">@ViewBag.TeamCount</div>
+            <div class="kpi-label">Teams Available</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon red"><i class="fas fa-box-open"></i></div>
+        <div>
+            <div class="kpi-value">@ViewBag.LowStockCount</div>
+            <div class="kpi-label">Low Stock Alerts</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon amber"><i class="fas fa-clock"></i></div>
+        <div>
+            <div class="kpi-value">@ViewBag.PendingApprovals</div>
+            <div class="kpi-label">Pending Approvals</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon green"><i class="fas fa-hand-holding-heart"></i></div>
+        <div>
+            <div class="kpi-value">@FormatNum(ViewBag.TotalDonations)</div>
+            <div class="kpi-label">Total Donations (PKR)</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon orange"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div>
+            <div class="kpi-value">@FormatNum(ViewBag.TotalExpenses)</div>
+            <div class="kpi-label">Total Expenses (PKR)</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon blue"><i class="fas fa-hospital"></i></div>
+        <div>
+            <div class="kpi-value">@ViewBag.TotalHospitalBeds</div>
+            <div class="kpi-label">Total Hospital Beds</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon red"><i class="fas fa-procedures"></i></div>
+        <div>
+            <div class="kpi-value">@ViewBag.OccupiedBeds</div>
+            <div class="kpi-label">Occupied Beds</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="charts-grid">
+    <div class="card" style="display:flex;flex-direction:column;min-height:280px">
+        <div class="card-title"><i class="fas fa-chart-bar" style="color:var(--accent)"></i> Reports by Severity</div>
+        <div style="flex:1;position:relative;min-height:200px">
+            <canvas id="severityChart" style="position:absolute;inset:0;width:100%!important;height:100%!important"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title"><i class="fas fa-chart-pie" style="color:var(--accent-2)"></i> Finance by Category</div>
+        <canvas id="financeChart" height="200"></canvas>
+    </div>
+    <div class="card">
+        <div class="card-title"><i class="fas fa-chart-donut" style="color:var(--accent-3)"></i> Reports by Disaster Type</div>
+        <canvas id="disasterChart" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Recent Reports -->
+<div class="card">
+    <div class="card-title"><i class="fas fa-list-alt" style="color:var(--accent-4)"></i> Recent Emergency Reports</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Location</th>
+                    <th>Disaster Type</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (recentReports != null && recentReports.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in recentReports.Rows)
+                    {
+                        string sev = row["SeverityLevel"].ToString();
+                        string status = row["Status"].ToString().ToLower();
+                        <tr>
+                            <td style="color:var(--text-muted)">@row["ReportID"]</td>
+                            <td><i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:6px"></i>@row["Location"]</td>
+                            <td>@row["DisasterType"]</td>
+                            <td><span class="sev-@sev"><i class="fas fa-circle" style="font-size:8px"></i> @sev/5</span></td>
+                            <td><span class="badge badge-@status">@row["Status"]</span></td>
+                            <td style="color:var(--text-muted)">@(Convert.ToDateTime(row["ReportTime"]).ToString("MMM dd HH:mm"))</td>
+                            <td><a asp-controller="Emergency" asp-action="Details" asp-route-id="@row["ReportID"]" class="btn btn-sm btn-secondary"><i class="fas fa-eye"></i></a></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">No recent reports</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const chartDefaults = {
+    plugins: { legend: { labels: { color: '#8b949e', font: { family: 'Inter', size: 12 } } } },
+    scales: {
+        x: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,.6)' } },
+        y: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,.6)' } }
+    }
+};
+
+// Severity chart
+const sevLabels = [@Html.Raw(string.Join(",", severityData?.Rows.Cast<System.Data.DataRow>().Select(r => $"'Severity {r["SeverityLevel"]}'") ?? Enumerable.Empty<string>()))];
+const sevCounts = [@Html.Raw(string.Join(",", severityData?.Rows.Cast<System.Data.DataRow>().Select(r => r["Count"].ToString()) ?? Enumerable.Empty<string>()))];
+new Chart(document.getElementById('severityChart'), {
+    type: 'bar',
+    data: {
+        labels: sevLabels,
+        datasets: [{ label: 'Reports', data: sevCounts, backgroundColor: ['#22c55e','#84cc16','#f59e0b','#f97316','#ef4444'], borderRadius: 6 }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        ...chartDefaults,
+        plugins: { ...chartDefaults.plugins, legend: { display: false } }
+    }
+});
+
+// Finance chart
+const finLabels = [@Html.Raw(string.Join(",", categoryData?.Rows.Cast<System.Data.DataRow>().Select(r => $"'{r["Category"]}'") ?? Enumerable.Empty<string>()))];
+const finTotals = [@Html.Raw(string.Join(",", categoryData?.Rows.Cast<System.Data.DataRow>().Select(r => r["Total"].ToString()) ?? Enumerable.Empty<string>()))];
+new Chart(document.getElementById('financeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: finLabels,
+        datasets: [{ data: finTotals, backgroundColor: ['#10b981','#ef4444','#3b82f6','#f59e0b'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: { plugins: chartDefaults.plugins }
+});
+
+// Disaster type chart
+const disLabels = [@Html.Raw(string.Join(",", disasterData?.Rows.Cast<System.Data.DataRow>().Select(r => $"'{r["DisasterType"]}'") ?? Enumerable.Empty<string>()))];
+const disCounts = [@Html.Raw(string.Join(",", disasterData?.Rows.Cast<System.Data.DataRow>().Select(r => r["Count"].ToString()) ?? Enumerable.Empty<string>()))];
+new Chart(document.getElementById('disasterChart'), {
+    type: 'pie',
+    data: {
+        labels: disLabels,
+        datasets: [{ data: disCounts, backgroundColor: ['#f97316','#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'], borderWidth: 0 }]
+    },
+    options: { plugins: chartDefaults.plugins }
+});
+</script>
+}
