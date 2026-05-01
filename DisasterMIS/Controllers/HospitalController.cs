@@ -78,10 +78,12 @@ namespace DisasterMIS.Controllers
         [HttpPost]
         public IActionResult UpdatePatientStatus(int patientID, string status)
         {
-            DbHelper.ExecuteNonQuery(
-                "UPDATE Patients SET Status = @Status WHERE PatientID = @PatientID",
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_UpdatePatientStatus",
+                new SqlParameter("@PatientID", patientID),
                 new SqlParameter("@Status", status),
-                new SqlParameter("@PatientID", patientID));
+                new SqlParameter("@UserID", userId));
 
             return RedirectToAction("Patients");
         }
@@ -89,10 +91,12 @@ namespace DisasterMIS.Controllers
         [HttpPost]
         public IActionResult Discharge(int patientID, int hospitalID)
         {
-            DbHelper.ExecuteNonQuery(
-                "DELETE FROM Admits WHERE PatientID = @PatientID AND HospitalID = @HospitalID",
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_DischargePatient",
                 new SqlParameter("@PatientID", patientID),
-                new SqlParameter("@HospitalID", hospitalID));
+                new SqlParameter("@HospitalID", hospitalID),
+                new SqlParameter("@UserID", userId));
 
             return RedirectToAction("Patients");
         }

@@ -37,11 +37,13 @@ namespace DisasterMIS.Controllers
         [HttpPost]
         public IActionResult Create(string teamName, string currentLocation, int teamTypeID)
         {
-            DbHelper.ExecuteNonQuery(
-                "INSERT INTO RescueTeams (TeamName, CurrentLocation, AvailabilityStatus, TeamTypeID) VALUES (@Name, @Location, 'Available', @TypeID)",
-                new SqlParameter("@Name", teamName),
-                new SqlParameter("@Location", currentLocation),
-                new SqlParameter("@TypeID", teamTypeID));
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_CreateRescueTeam",
+                new SqlParameter("@TeamName", teamName),
+                new SqlParameter("@CurrentLocation", currentLocation),
+                new SqlParameter("@TeamTypeID", teamTypeID),
+                new SqlParameter("@UserID", userId));
 
             return RedirectToAction("Index");
         }

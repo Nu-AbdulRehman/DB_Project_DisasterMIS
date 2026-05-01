@@ -104,12 +104,14 @@ namespace DisasterMIS.Controllers
         [Authorize(Roles = "Administrator,Warehouse Manager")]
         public IActionResult AddResource(string resourceName, int stockLevel, int thresholdLevel, int resourceTypeID)
         {
-            DbHelper.ExecuteNonQuery(
-                "INSERT INTO Resources (ResourceName, StockLevel, ThresholdLevel, ResourceTypeID) VALUES (@Name, @Stock, @Threshold, @TypeID)",
-                new SqlParameter("@Name", resourceName),
-                new SqlParameter("@Stock", stockLevel),
-                new SqlParameter("@Threshold", thresholdLevel),
-                new SqlParameter("@TypeID", resourceTypeID));
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_AddResource",
+                new SqlParameter("@ResourceName", resourceName),
+                new SqlParameter("@StockLevel", stockLevel),
+                new SqlParameter("@ThresholdLevel", thresholdLevel),
+                new SqlParameter("@ResourceTypeID", resourceTypeID),
+                new SqlParameter("@UserID", userId));
 
             return RedirectToAction("Index");
         }
@@ -118,10 +120,12 @@ namespace DisasterMIS.Controllers
         [Authorize(Roles = "Administrator,Warehouse Manager")]
         public IActionResult UpdateStock(int resourceID, int additionalStock)
         {
-            DbHelper.ExecuteNonQuery(
-                "UPDATE Resources SET StockLevel = StockLevel + @Additional WHERE ResourceID = @ResourceID",
-                new SqlParameter("@Additional", additionalStock),
-                new SqlParameter("@ResourceID", resourceID));
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_UpdateResourceStock",
+                new SqlParameter("@ResourceID", resourceID),
+                new SqlParameter("@AdditionalStock", additionalStock),
+                new SqlParameter("@UserID", userId));
 
             TempData["Success"] = "Stock updated successfully.";
             return RedirectToAction("Index");
@@ -131,11 +135,13 @@ namespace DisasterMIS.Controllers
         [Authorize(Roles = "Administrator,Warehouse Manager,Field Officer")]
         public IActionResult ConsumeResource(int allocationID, int resourceID, int reportID)
         {
-            DbHelper.ExecuteNonQuery(
-                "UPDATE ResourceAllocations SET Status = 'Consumed' WHERE AllocationID = @AID AND ResourceID = @RID AND ReportID = @RepID",
-                new SqlParameter("@AID", allocationID),
-                new SqlParameter("@RID", resourceID),
-                new SqlParameter("@RepID", reportID));
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_ConsumeResource",
+                new SqlParameter("@AllocationID", allocationID),
+                new SqlParameter("@ResourceID", resourceID),
+                new SqlParameter("@ReportID", reportID),
+                new SqlParameter("@UserID", userId));
 
             TempData["Success"] = "Resource marked as consumed.";
             return RedirectToAction("Allocations");

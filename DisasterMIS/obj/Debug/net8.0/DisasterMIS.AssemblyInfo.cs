@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DisasterMIS")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+766fa17eaa2db3cb3643f30c3260b73db4c60fa2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+37b34203ed073c3654c0de6204ecd834f7e143d1")]
 [assembly: System.Reflection.AssemblyProductAttribute("DisasterMIS")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DisasterMIS")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

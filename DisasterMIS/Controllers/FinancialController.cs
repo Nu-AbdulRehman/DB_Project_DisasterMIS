@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Data.SqlClient;
+using System.Security.Claims;
 using DisasterMIS.Data;
 
 namespace DisasterMIS.Controllers
@@ -57,12 +58,14 @@ namespace DisasterMIS.Controllers
         [Authorize(Roles = "Administrator,Finance Officer")]
         public IActionResult Create(decimal amount, string category, string description, int eventID)
         {
-            DbHelper.ExecuteNonQuery(
-                "INSERT INTO FinancialRecords (Amount, Category, Description, TransactionDate, EventID) VALUES (@Amount, @Category, @Description, GETDATE(), @EventID)",
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_RecordFinancialTransaction",
                 new SqlParameter("@Amount", amount),
                 new SqlParameter("@Category", category),
                 new SqlParameter("@Description", description ?? (object)DBNull.Value),
-                new SqlParameter("@EventID", eventID));
+                new SqlParameter("@EventID", eventID),
+                new SqlParameter("@UserID", userId));
 
             TempData["Success"] = "Transaction recorded successfully.";
             return RedirectToAction("Index");
@@ -71,8 +74,12 @@ namespace DisasterMIS.Controllers
         [Authorize(Roles = "Administrator,Finance Officer")]
         public IActionResult Delete(int id)
         {
-            DbHelper.ExecuteNonQuery("DELETE FROM FinancialRecords WHERE TransactionID = @ID",
-                new SqlParameter("@ID", id));
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_DeleteFinancialRecord",
+                new SqlParameter("@TransactionID", id),
+                new SqlParameter("@UserID", userId));
+
             return RedirectToAction("Index");
         }
 

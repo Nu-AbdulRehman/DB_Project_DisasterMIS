@@ -57,10 +57,9 @@ namespace DisasterMIS.Controllers
         {
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-            DbHelper.ExecuteNonQuery(
-                "INSERT INTO EmergencyReports (Location, SeverityLevel, Status, ReportTime, EventID, UserID) VALUES (@Location, @Severity, 'Pending', GETDATE(), @EventID, @UserID)",
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_CreateEmergencyReport",
                 new SqlParameter("@Location", location),
-                new SqlParameter("@Severity", severityLevel),
+                new SqlParameter("@SeverityLevel", severityLevel),
                 new SqlParameter("@EventID", eventID),
                 new SqlParameter("@UserID", userId));
 
@@ -107,10 +106,12 @@ namespace DisasterMIS.Controllers
         [HttpPost]
         public IActionResult UpdateStatus(int reportID, string status)
         {
-            DbHelper.ExecuteNonQuery(
-                "UPDATE EmergencyReports SET Status = @Status WHERE ReportID = @ReportID",
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_UpdateEmergencyStatus",
+                new SqlParameter("@ReportID", reportID),
                 new SqlParameter("@Status", status),
-                new SqlParameter("@ReportID", reportID));
+                new SqlParameter("@UserID", userId));
 
             return RedirectToAction("Details", new { id = reportID });
         }
@@ -118,7 +119,12 @@ namespace DisasterMIS.Controllers
         [Authorize(Roles = "Administrator")]
         public IActionResult Delete(int id)
         {
-            DbHelper.ExecuteNonQuery("DELETE FROM EmergencyReports WHERE ReportID = @ID", new SqlParameter("@ID", id));
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_DeleteEmergencyReport",
+                new SqlParameter("@ReportID", id),
+                new SqlParameter("@UserID", userId));
+
             return RedirectToAction("Index");
         }
     }

@@ -111,7 +111,7 @@ BEGIN
 END
 GO
 
--- Field officer confirms team has deployed: Assigned → Busy
+-- Field officer confirms team has deployed: Assigned => Busy
 CREATE OR ALTER PROCEDURE sp_MarkTeamBusy
     @AssignmentID INT,
     @ReportID INT,
@@ -328,6 +328,337 @@ BEGIN
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_CreateEmergencyReport
+    @Location NVARCHAR(200),
+    @SeverityLevel INT,
+    @EventID INT,
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        INSERT INTO EmergencyReports (Location, SeverityLevel, Status, ReportTime, EventID, UserID)
+        VALUES (@Location, @SeverityLevel, 'Pending', GETDATE(), @EventID, @UserID);
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'EmergencyReports'),
+            'INSERT', NULL,
+            'New report: ' + @Location + ', Severity ' + CAST(@SeverityLevel AS NVARCHAR),
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_UpdateEmergencyStatus
+    @ReportID INT,
+    @Status NVARCHAR(30),
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @OldStatus NVARCHAR(30);
+        SELECT @OldStatus = Status FROM EmergencyReports WHERE ReportID = @ReportID;
+
+        UPDATE EmergencyReports SET Status = @Status WHERE ReportID = @ReportID;
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'EmergencyReports'),
+            'UPDATE', @OldStatus, @Status,
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_DeleteEmergencyReport
+    @ReportID INT,
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @Location NVARCHAR(200);
+        SELECT @Location = Location FROM EmergencyReports WHERE ReportID = @ReportID;
+
+        DELETE FROM EmergencyReports WHERE ReportID = @ReportID;
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'EmergencyReports'),
+            'DELETE',
+            'ReportID ' + CAST(@ReportID AS NVARCHAR) + ': ' + ISNULL(@Location, ''),
+            NULL,
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_CreateRescueTeam
+    @TeamName NVARCHAR(100),
+    @CurrentLocation NVARCHAR(200),
+    @TeamTypeID INT,
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        INSERT INTO RescueTeams (TeamName, CurrentLocation, AvailabilityStatus, TeamTypeID)
+        VALUES (@TeamName, @CurrentLocation, 'Available', @TeamTypeID);
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'RescueTeams'),
+            'INSERT', NULL,
+            'Created team: ' + @TeamName,
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_AddResource
+    @ResourceName NVARCHAR(100),
+    @StockLevel INT,
+    @ThresholdLevel INT,
+    @ResourceTypeID INT,
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        INSERT INTO Resources (ResourceName, StockLevel, ThresholdLevel, ResourceTypeID)
+        VALUES (@ResourceName, @StockLevel, @ThresholdLevel, @ResourceTypeID);
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'Resources'),
+            'INSERT', NULL,
+            'Added resource: ' + @ResourceName + ', Stock: ' + CAST(@StockLevel AS NVARCHAR),
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_UpdateResourceStock
+    @ResourceID INT,
+    @AdditionalStock INT,
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @OldStock INT;
+        SELECT @OldStock = StockLevel FROM Resources WHERE ResourceID = @ResourceID;
+
+        UPDATE Resources SET StockLevel = StockLevel + @AdditionalStock WHERE ResourceID = @ResourceID;
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'Resources'),
+            'UPDATE',
+            'Stock: ' + CAST(@OldStock AS NVARCHAR),
+            'Stock: ' + CAST(@OldStock + @AdditionalStock AS NVARCHAR),
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_ConsumeResource
+    @AllocationID INT,
+    @ResourceID INT,
+    @ReportID INT,
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        -- trg_AuditResourceAllocationUpdate fires on this UPDATE
+        UPDATE ResourceAllocations
+        SET Status = 'Consumed'
+        WHERE AllocationID = @AllocationID AND ResourceID = @ResourceID AND ReportID = @ReportID;
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'ResourceAllocations'),
+            'UPDATE', NULL,
+            'Consumed AllocationID ' + CAST(@AllocationID AS NVARCHAR),
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_UpdatePatientStatus
+    @PatientID INT,
+    @Status NVARCHAR(30),
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @OldStatus NVARCHAR(30);
+        SELECT @OldStatus = Status FROM Patients WHERE PatientID = @PatientID;
+
+        UPDATE Patients SET Status = @Status WHERE PatientID = @PatientID;
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'Patients'),
+            'UPDATE', @OldStatus, @Status,
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_DischargePatient
+    @PatientID INT,
+    @HospitalID INT,
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @PatientName NVARCHAR(100);
+        SELECT @PatientName = FirstName + ' ' + LastName FROM Patients WHERE PatientID = @PatientID;
+
+        DELETE FROM Admits WHERE PatientID = @PatientID AND HospitalID = @HospitalID;
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'Admits'),
+            'DELETE',
+            'Discharged: ' + ISNULL(@PatientName, 'PatientID ' + CAST(@PatientID AS NVARCHAR)),
+            NULL,
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_SubmitApprovalRequest
+    @RequesterID INT,
+    @RequestTypeID INT,
+    @AllocationID INT = NULL,
+    @Notes NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        INSERT INTO ApprovalWorkflow (RequesterID, RequestTypeID, AllocationID, Status, Notes)
+        VALUES (@RequesterID, @RequestTypeID, @AllocationID, 'Pending', @Notes);
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@RequesterID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'ApprovalWorkflow'),
+            'INSERT', NULL,
+            'Approval request: TypeID ' + CAST(@RequestTypeID AS NVARCHAR) + ' - ' + ISNULL(@Notes, ''),
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_DeleteFinancialRecord
+    @TransactionID INT,
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @Category NVARCHAR(50);
+        DECLARE @Amount DECIMAL(18,2);
+        SELECT @Category = Category, @Amount = Amount
+        FROM FinancialRecords WHERE TransactionID = @TransactionID;
+
+        -- trg_AuditFinancialDelete also fires on this DELETE
+        DELETE FROM FinancialRecords WHERE TransactionID = @TransactionID;
+
+        INSERT INTO AuditLog (UserID, TableID, Action, OldValue, NewValue, Timestamp)
+        VALUES (@UserID,
+            (SELECT TableID FROM Tables WHERE AffectedTable = 'FinancialRecords'),
+            'DELETE',
+            @Category + ': ' + CAST(@Amount AS NVARCHAR),
+            NULL,
+            GETDATE());
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         THROW;
     END CATCH
 END

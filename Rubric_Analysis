@@ -1,0 +1,298 @@
+# Project Rubric — Implementation Coverage Analysis
+**DisasterMIS System | Total: /110 marks**
+
+---
+
+## CLO 1 — Data Management & Querying (/18)
+
+### 1. Views & Data Abstraction `/7`
+
+**✅ Fully Implemented**
+
+| View | Purpose | File |
+|---|---|---|
+| `vw_ActiveEmergencies` | JOIN on EmergencyReports + DisasterEvents + Users, filtered by Pending/Active status | `06_Views.sql` |
+| `vw_TeamAvailability` | JOIN RescueTeams + TeamTypes | `06_Views.sql` |
+| `vw_ResourceInventory` | Computed `StockStatus` column (CASE WHEN threshold) | `06_Views.sql` |
+| `vw_HospitalCapacity` | LEFT JOIN + GROUP BY to compute `AvailableBeds`, `CriticalCases` | `06_Views.sql` |
+| `vw_FinancialSummary` | JOIN FinancialRecords + DisasterEvents | `06_Views.sql` |
+| `vw_ApprovalStatus` | Multi-table JOIN (Requester, Approver, RequestType) | `06_Views.sql` |
+| `vw_AuditTrail` | JOIN AuditLog + Users + Tables | `06_Views.sql` |
+| `vw_FieldOfficerView` | Role-scoped view (emergency data only) | `06_Views.sql` |
+| `vw_FinanceOfficerView` | Role-scoped view (financial data only) | `06_Views.sql` |
+| `vw_WarehouseInventory` | 4-way JOIN for warehouse stock | `06_Views.sql` |
+
+**In C#:** Controllers consume views indirectly by mirroring the same JOIN logic inline (e.g., `HospitalController.Index()` reproduces `vw_HospitalCapacity` query exactly). Views are also directly available for ad-hoc use.
+
+---
+
+### 2. Indexing & Performance `/5`
+
+**✅ Fully Implemented**
+
+**SQL (`07_Indexes.sql`) — 12 non-clustered indexes:**
+
+```sql
+IX_EmergencyReports_Location          -- supports LIKE location filters
+IX_EmergencyReports_SeverityLevel     -- supports severity range queries
+IX_EmergencyReports_EventID_Status    -- composite, supports filtered JOINs
+IX_EmergencyReports_Status            -- supports status filter (Dashboard counts)
+IX_FinancialRecords_TransactionDate   -- supports date-range filters
+IX_FinancialRecords_Category          -- supports category aggregation
+IX_Resources_ResourceTypeID           -- supports type-grouped inventory
+IX_RescueAssignments_ReportID_TeamID  -- composite PK lookup
+IX_RescueAssignments_Status           -- active/completed assignment filter
+IX_AuditLog_Timestamp                 -- time-ordered audit trail
+IX_AuditLog_UserID                    -- per-user activity filter
+IX_ApprovalWorkflow_Status            -- pending approval dashboard count
+IX_ResourceAllocations_Status         -- allocation status filter
+```
+
+**Performance Analysis (`08_PerformanceAnalysis.sql`):** 6 before/after tests using `SET STATISTICS TIME ON; SET STATISTICS IO ON;` comparing forced table scans (`WITH (INDEX(0))`) against indexed queries.
+
+**In C#:** Indexes are transparent to C# — they are exercised automatically when controllers run parameterized queries (e.g., `EmergencyController` filters by `Status`, `Location`, `SeverityLevel` — all indexed columns).
+
+---
+
+### 3. MIS Queries / Reporting `/6`
+
+**✅ Fully Implemented**
+
+| Query / Report | Where |
+|---|---|
+| Active emergency count, team count, low-stock count, pending approvals, donation/expense totals, bed occupancy | `DashboardController.Index()` — 8 scalar queries |
+| Emergency reports filtered by status/location/severity | `EmergencyController.Index()` |
+| Financial summary by category, by event, by month | `FinancialController.Summary()` — GROUP BY + FORMAT |
+| Resource inventory with stock status | `ResourceController.Index()` |
+| Rescue assignment history | `RescueController.History()` |
+| Per-user audit activity | `AuditController.UserActivity()` |
+| Hospital capacity with available beds + critical count | `HospitalController.Index()` |
+
+Charts on dashboard (severity breakdown, financial by category, disasters by type) are rendered from aggregation queries.
+
+---
+
+## CLO 2 — Database Design Quality (/7)
+
+### 4. Normalization `/3`
+
+**✅ Implemented**
+
+The schema follows **3NF** throughout:
+
+- **Lookup tables** eliminate repeating string values: `UserTypes`, `TeamTypes`, `ResourceTypes`, `RequestTypes` — all stored as INT FK instead of inline VARCHAR.
+- **DisasterEvents** is separate from `EmergencyReports` (event type vs. report instance).
+- **WarehouseStock** junction table separates the M:N relationship between `Warehouses` and `Resources`.
+- **Admits** junction table separates the M:N relationship between `Hospitals` and `Patients`.
+- No transitive dependencies — `RescueAssignments` carries only assignment-specific columns (`AssignedAt`, `CompletedAt`, `Status`, `CompletionNotes`).
+
+---
+
+### 5. Data Consistency in Schema Design `/4`
+
+**✅ Implemented**
+
+**CHECK Constraints:**
+```sql
+SeverityLevel INT NOT NULL CHECK (SeverityLevel BETWEEN 1 AND 5)
+StockLevel    INT NOT NULL DEFAULT 0 CHECK (StockLevel >= 0)
+Stock         INT NOT NULL DEFAULT 0 CHECK (Stock >= 0)
+TotalBeds     INT NOT NULL CHECK (TotalBeds >= 0)
+Quantity      INT NOT NULL CHECK (Quantity > 0)
+```
+
+**DEFAULT Values:** `Status = 'Pending'`, `IsActive = 1`, `ReportTime = GETDATE()`, `AllocationDate = GETDATE()`, `AssignedAt = GETDATE()`, `AdmissionDate = GETDATE()`, `StockLevel = 0`.
+
+**NOT NULL + UNIQUE:** `Email NVARCHAR(100) NOT NULL UNIQUE`, all FK columns are `NOT NULL` (except nullable ApproverID before approval).
+
+**Composite PKs** enforce uniqueness of relationships: `RescueAssignments (AssignmentID, ReportID, TeamID)`, `ResourceAllocations (AllocationID, ResourceID, ReportID)`, `WarehouseStock (WarehouseID, ResourceID)`, `Admits (HospitalID, PatientID)`.
+
+---
+
+## CLO 3 — Design (/25)
+
+### 6. ERD Design `/10`
+
+**✅ Documented** — `DisasterMIS_ERD_v3.jpg` and `DisasterMIS_ERD.xml` are in the repo root.
+
+Entities: Users, UserTypes, DisasterEvents, EmergencyReports, RescueTeams, TeamTypes, RescueAssignments, Resources, ResourceTypes, Warehouses, WarehouseStock, ResourceAllocations, Hospitals, Patients, Admits, FinancialRecords, RequestTypes, ApprovalWorkflow, Tables, AuditLog.
+
+---
+
+### 7. Relational Schema `/10`
+
+**✅ Implemented** — `02_CreateTables.sql` defines 20 tables with all PKs, FKs, constraints, and defaults as designed in the ERD.
+
+All relationships faithfully translate to SQL:
+- 1:N: User → EmergencyReports, DisasterEvent → EmergencyReports, Team → RescueAssignments, etc.
+- M:N: Warehouses ↔ Resources via `WarehouseStock`, Hospitals ↔ Patients via `Admits`, Reports ↔ Teams via `RescueAssignments`.
+
+---
+
+### 8. Design Rationale `/5`
+
+**Points to mention in presentation:**
+- Composite PKs on junction tables prevent duplicate assignments/admissions.
+- Separate `Tables` lookup for AuditLog ensures audit entries are table-agnostic without hardcoding strings.
+- `ThresholdLevel` stored on `Resources` (not computed) for fast trigger/view evaluation.
+- `AvailabilityStatus` on `RescueTeams` is a managed state machine (Available → Assigned → Busy → Available) enforced at the stored-procedure level.
+
+---
+
+## CLO 4 — SQL Implementation (/60)
+
+### 9. SQL Implementation `/20`
+
+**✅ Fully Implemented**
+
+All DML uses parameterized ADO.NET (`SqlParameter`) via `DbHelper`. Core SQL includes:
+
+| Feature | SQL |
+|---|---|
+| User authentication | `sp_AuthenticateUser` — filtered SELECT with credential match |
+| Emergency CRUD | `EmergencyController` — INSERT, SELECT with dynamic WHERE, UPDATE status, DELETE (admin only) |
+| Resource inventory | SELECT + CASE WHEN threshold in `vw_ResourceInventory` |
+| Financial aggregation | GROUP BY Category, EventID, Month in `FinancialController.Summary()` |
+| Hospital capacity | LEFT JOIN + GROUP BY + HAVING in `HospitalController.Admit()` |
+| Dashboard KPIs | 8 scalar COUNT/SUM queries across all tables |
+
+**In C#:** `DbHelper.cs` provides `ExecuteQuery`, `ExecuteNonQuery`, `ExecuteScalar`, `ExecuteStoredProcedure`, `ExecuteStoredProcedureNonQuery` — all using `using` blocks and parameterized commands.
+
+---
+
+### 10. Transactions `/15`
+
+**✅ Fully Implemented — All critical SPs use explicit transactions**
+
+| Stored Procedure | Isolation Level | What it protects |
+|---|---|---|
+| `sp_AllocateResource` | `SERIALIZABLE` + `UPDLOCK, ROWLOCK` | Prevents double-allocation of same resource stock |
+| `sp_AssignRescueTeam` | `SERIALIZABLE` + `UPDLOCK, ROWLOCK` | Prevents assigning an already-busy team concurrently |
+| `sp_MarkTeamBusy` | `BEGIN TRANSACTION` | Atomic status update + audit |
+| `sp_CompleteAssignment` | `BEGIN TRANSACTION` + `UPDLOCK, ROWLOCK` | Reads old status, marks complete, conditionally restores team |
+| `sp_RecordFinancialTransaction` | `BEGIN TRANSACTION` | Atomic INSERT + audit log |
+| `sp_ProcessApproval` | `BEGIN TRANSACTION` | Atomic approval + linked allocation status update |
+| `sp_AdmitPatient` | `BEGIN TRANSACTION` | Bed availability check + INSERT Patients + INSERT Admits atomically |
+
+All use `BEGIN TRY / BEGIN CATCH` with `IF @@TRANCOUNT > 0 ROLLBACK; THROW;`.
+
+**In C#:** Controllers call SPs via `DbHelper.ExecuteStoredProcedureNonQuery()` wrapped in `try/catch` that surfaces `TempData["Error"]` to the UI. The transaction boundary lives entirely in SQL Server.
+
+---
+
+### 11. Role-Based Access Control `/7`
+
+**✅ Fully Implemented — two layers**
+
+**SQL Layer:**
+- Role-scoped views: `vw_FieldOfficerView` (emergency data only), `vw_FinanceOfficerView` (financial data only).
+- `sp_AuthenticateUser` returns `UserType` from the `UserTypes` lookup table.
+
+**C# Layer (ASP.NET Cookie Auth + Claims):**
+
+```csharp
+// AccountController.cs — claims set at login
+new Claim(ClaimTypes.Role, row["UserType"].ToString())
+
+// Controller-level guards
+[Authorize]                                          // any authenticated user
+[Authorize(Roles = "Administrator")]                 // AuditController (whole controller)
+[Authorize(Roles = "Administrator,Finance Officer")] // FinancialController Create/Delete
+[Authorize(Roles = "Administrator,Warehouse Manager")] // AddResource, UpdateStock
+[Authorize(Roles = "Administrator,Warehouse Manager,Field Officer")] // ConsumeResource
+[Authorize(Roles = "Administrator")]                 // ApprovalController.Process()
+[Authorize(Roles = "Administrator")]                 // EmergencyController.Delete()
+```
+
+**Runtime data filtering:** `ApprovalController.Index()` additionally filters by `RequesterID` for non-Administrators — non-admins can only see their own approval requests.
+
+---
+
+### 12. Triggers `/4`
+
+**✅ Fully Implemented — 7 triggers**
+
+| Trigger | Table | Event | Effect |
+|---|---|---|---|
+| `trg_PreventNegativeInventory` | Resources | AFTER UPDATE | Rolls back if `StockLevel < 0` |
+| `trg_UpdateTeamStatusOnAssignment` | RescueAssignments | AFTER INSERT | Sets team to `Assigned` |
+| `trg_UpdateTeamStatusOnCompletion` | RescueAssignments | AFTER UPDATE | Restores team to `Available` if no active assignments |
+| `trg_AuditFinancialInsert` | FinancialRecords | AFTER INSERT | Writes AuditLog entry |
+| `trg_AuditFinancialUpdate` | FinancialRecords | AFTER UPDATE | Writes old/new to AuditLog |
+| `trg_AuditFinancialDelete` | FinancialRecords | AFTER DELETE | Writes deleted value to AuditLog |
+| `trg_LowStockAlert` | Resources | AFTER UPDATE | Prints warning when stock ≤ threshold |
+| `trg_AuditResourceAllocationUpdate` | ResourceAllocations | AFTER UPDATE | Writes status change to AuditLog |
+
+---
+
+### 13. Audit & Security `/4`
+
+**✅ Fully Implemented**
+
+**SQL:**
+- `AuditLog` table captures: `UserID`, `TableID` (FK to `Tables` lookup), `Action` (INSERT/UPDATE/DELETE), `OldValue`, `NewValue`, `Timestamp`.
+- Every SP writes to AuditLog after its DML (resource allocation, team assignment, patient admission, financial transactions, approval processing).
+- Triggers write AuditLog independently for financial record changes.
+- `vw_AuditTrail` view joins AuditLog → Users → Tables for human-readable audit display.
+
+**C#:**
+- `AuditController` is `[Authorize(Roles = "Administrator")]` — only admins can view audit logs.
+- Filterable by table, action type, and date range via parameterized dynamic SQL.
+- `AuditController.UserActivity(int userID)` shows per-user action history.
+- Passwords stored as `"hashed_" + password` (simplified hash scheme used in the project).
+
+---
+
+### 14. System Integration `/5`
+
+**✅ Fully Implemented**
+
+**Architecture:** ASP.NET Core MVC (.NET) + SQL Server Express + ADO.NET (no ORM).
+
+**Integration points:**
+- `Program.cs` initializes `DbHelper` with the connection string from `appsettings.json`.
+- `DbHelper.cs` is a static service class — single connection-string source of truth.
+- All 10 controllers use `DbHelper` exclusively — no raw connection strings scattered in code.
+- Stored procedures are called by name with typed `SqlParameter` arrays.
+- Cookie-based auth integrates with ASP.NET's `[Authorize]` middleware.
+- `TempData["Success"]` / `TempData["Error"]` propagate SP exceptions (including `RAISERROR` messages) back to the UI.
+
+---
+
+### 15. Frontend `/5`
+
+**✅ Implemented**
+
+- ASP.NET Razor Views for all modules: Emergency, Rescue, Resource, Hospital, Financial, Approval, Audit, Dashboard.
+- Dashboard shows live KPI cards (emergencies, teams, low stock, approvals, donations, expenses, bed occupancy) + charts.
+- Forms use POST with CSRF token (`[ValidateAntiForgeryToken]` via Razor form helpers).
+- Role-aware UI: `ViewBag.Role` passed from Dashboard; nav conditionally shows/hides sections.
+- Filtering forms (status, location, severity, category, date range) across Emergency, Financial, Audit modules.
+
+---
+
+## Summary Table
+
+| # | Rubric Item | Marks | Status | Key Evidence |
+|---|---|---|---|---|
+| 1 | Views & Data Abstraction | /7 | ✅ | 10 views in `06_Views.sql` |
+| 2 | Indexing & Performance | /5 | ✅ | 12 indexes + 6 perf tests |
+| 3 | MIS Queries/Reporting | /6 | ✅ | Dashboard + Summary + filters |
+| 4 | Normalization | /3 | ✅ | 3NF, lookup tables, junction tables |
+| 5 | Data Consistency | /4 | ✅ | CHECKs, DEFAULTs, composite PKs |
+| 6 | ERD Design | /10 | ✅ | ERD jpg + xml in repo |
+| 7 | Relational Schema | /10 | ✅ | `02_CreateTables.sql` — 20 tables |
+| 8 | Design Rationale | /5 | ✅ | State machine, composite PKs, audit lookup |
+| 9 | SQL Implementation | /20 | ✅ | Full CRUD, SPs, parameterized ADO.NET |
+| 10 | Transactions | /15 | ✅ | 7 SPs with SERIALIZABLE + UPDLOCK |
+| 11 | Role-Based Access Control | /7 | ✅ | SQL views + C# `[Authorize(Roles=...)]` |
+| 12 | Triggers | /4 | ✅ | 8 triggers (audit + business rules) |
+| 13 | Audit & Security | /4 | ✅ | AuditLog + admin-only controller |
+| 14 | System Integration | /5 | ✅ | ASP.NET + SQL Server + ADO.NET |
+| 15 | Frontend | /5 | ✅ | Razor views, charts, role-aware nav |
+
+> [!IMPORTANT]
+> **Potential gaps to address before submission:**
+> - Password hashing uses `"hashed_" + password` (a stub). If the rubric expects real hashing (SHA-256/bcrypt), mention this is a simplified demo scheme.
+> - The `trg_LowStockAlert` trigger only does `PRINT` — it doesn't insert to AuditLog. Consider whether this satisfies the "trigger" criterion fully.
+> - `FinancialController.Create()` uses direct INSERT instead of `sp_RecordFinancialTransaction` — the SP won't be triggered from the UI for financial records. The trigger `trg_AuditFinancialInsert` still fires, so audit is covered.

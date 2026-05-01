@@ -63,9 +63,7 @@ namespace DisasterMIS.Controllers
         {
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-            DbHelper.ExecuteNonQuery(
-                @"INSERT INTO ApprovalWorkflow (RequesterID, RequestTypeID, AllocationID, Status, Notes)
-                VALUES (@RequesterID, @RequestTypeID, @AllocationID, 'Pending', @Notes)",
+            DbHelper.ExecuteStoredProcedureNonQuery("sp_SubmitApprovalRequest",
                 new SqlParameter("@RequesterID", userId),
                 new SqlParameter("@RequestTypeID", requestTypeID),
                 new SqlParameter("@AllocationID", (object)allocationID ?? DBNull.Value),
