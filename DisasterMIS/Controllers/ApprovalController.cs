@@ -14,31 +14,23 @@ namespace DisasterMIS.Controllers
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             string role = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            string query = @"SELECT aw.ApprovalID, aw.RequesterID, aw.Status, aw.Notes,
-                rt.RequestType, aw.AllocationID,
-                req.FullName AS RequesterName,
-                apr.FullName AS ApproverName
-                FROM ApprovalWorkflow aw
-                INNER JOIN RequestTypes rt ON aw.RequestTypeID = rt.RequestTypeID
-                INNER JOIN Users req ON aw.RequesterID = req.UserID
-                LEFT JOIN Users apr ON aw.ApproverID = apr.UserID
-                WHERE 1=1";
+            string query = "SELECT * FROM vw_ApprovalStatus WHERE 1=1";
 
             var parameters = new List<SqlParameter>();
 
-            if (!string.IsNullOrEmpty(status))
+            if (!string.IsNullOrEmpty(status) && status != "All")
             {
-                query += " AND aw.Status = @Status";
+                query += " AND Status = @Status";
                 parameters.Add(new SqlParameter("@Status", status));
             }
 
             if (role != "Administrator")
             {
-                query += " AND aw.RequesterID = @UserID";
+                query += " AND RequesterID = @UserID";
                 parameters.Add(new SqlParameter("@UserID", userId));
             }
 
-            query += " ORDER BY aw.ApprovalID DESC";
+            query += " ORDER BY ApprovalID DESC";
 
             ViewBag.Approvals = DbHelper.ExecuteQuery(query, parameters.ToArray());
             ViewBag.RequestTypes = DbHelper.ExecuteQuery("SELECT * FROM RequestTypes");

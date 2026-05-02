@@ -16,6 +16,7 @@ CREATE TABLE Users
     IsActive BIT NOT NULL DEFAULT 1,
     UserTypeID INT NOT NULL,
     FOREIGN KEY (UserTypeID) REFERENCES UserTypes(UserTypeID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE DisasterEvents
@@ -33,8 +34,10 @@ CREATE TABLE EmergencyReports
     ReportTime DATETIME2 NOT NULL DEFAULT GETDATE(),
     EventID INT NOT NULL,
     UserID INT NOT NULL,
-    FOREIGN KEY (EventID) REFERENCES DisasterEvents(EventID),
+    FOREIGN KEY (EventID) REFERENCES DisasterEvents(EventID)
+    ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE TeamTypes
@@ -51,6 +54,7 @@ CREATE TABLE RescueTeams
     AvailabilityStatus NVARCHAR(30) NOT NULL DEFAULT 'Available',
     TeamTypeID INT NOT NULL,
     FOREIGN KEY (TeamTypeID) REFERENCES TeamTypes(TeamTypeID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE RescueAssignments
@@ -63,8 +67,10 @@ CREATE TABLE RescueAssignments
     Status NVARCHAR(30) NOT NULL DEFAULT 'Assigned',
     CompletionNotes NVARCHAR(500),
     PRIMARY KEY (AssignmentID, ReportID, TeamID),
-    FOREIGN KEY (ReportID) REFERENCES EmergencyReports(ReportID),
+    FOREIGN KEY (ReportID) REFERENCES EmergencyReports(ReportID)
+    ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (TeamID) REFERENCES RescueTeams(TeamID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE ResourceTypes
@@ -81,6 +87,7 @@ CREATE TABLE Resources
     ThresholdLevel INT NOT NULL DEFAULT 10,
     ResourceTypeID INT NOT NULL,
     FOREIGN KEY (ResourceTypeID) REFERENCES ResourceTypes(ResourceTypeID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Warehouses
@@ -96,8 +103,10 @@ CREATE TABLE WarehouseStock
     ResourceID INT NOT NULL,
     Stock INT NOT NULL DEFAULT 0 CHECK (Stock >= 0),
     PRIMARY KEY (WarehouseID, ResourceID),
-    FOREIGN KEY (WarehouseID) REFERENCES Warehouses(WarehouseID),
+    FOREIGN KEY (WarehouseID) REFERENCES Warehouses(WarehouseID)
+    ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (ResourceID) REFERENCES Resources(ResourceID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE ResourceAllocations
@@ -109,8 +118,10 @@ CREATE TABLE ResourceAllocations
     Status NVARCHAR(30) NOT NULL DEFAULT 'Pending',
     AllocationDate DATETIME2 NOT NULL DEFAULT GETDATE(),
     PRIMARY KEY (AllocationID, ResourceID, ReportID),
-    FOREIGN KEY (ResourceID) REFERENCES Resources(ResourceID),
+    FOREIGN KEY (ResourceID) REFERENCES Resources(ResourceID)
+    ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (ReportID) REFERENCES EmergencyReports(ReportID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Hospitals
@@ -136,8 +147,10 @@ CREATE TABLE Admits
     BedNumber INT NOT NULL,
     AdmissionDate DATETIME2 NOT NULL DEFAULT GETDATE(),
     PRIMARY KEY (HospitalID, PatientID),
-    FOREIGN KEY (HospitalID) REFERENCES Hospitals(HospitalID),
+    FOREIGN KEY (HospitalID) REFERENCES Hospitals(HospitalID)
+    ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE FinancialRecords
@@ -149,6 +162,7 @@ CREATE TABLE FinancialRecords
     TransactionDate DATETIME2 NOT NULL DEFAULT GETDATE(),
     EventID INT NOT NULL,
     FOREIGN KEY (EventID) REFERENCES DisasterEvents(EventID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE RequestTypes
@@ -159,17 +173,23 @@ CREATE TABLE RequestTypes
 
 CREATE TABLE ApprovalWorkflow
 (
-    ApprovalID INT IDENTITY,
-    RequesterID INT NOT NULL,
-    ApproverID INT,
+    ApprovalID    INT IDENTITY,
+    RequesterID   INT NOT NULL,
+    ApproverID    INT NOT NULL,
     RequestTypeID INT NOT NULL,
-    AllocationID INT,
-    Status NVARCHAR(30) NOT NULL DEFAULT 'Pending',
-    Notes NVARCHAR(500),
-    PRIMARY KEY (ApprovalID, RequesterID),
-    FOREIGN KEY (RequesterID) REFERENCES Users(UserID),
-    FOREIGN KEY (ApproverID) REFERENCES Users(UserID),
+    AllocationID  INT,
+    Status        NVARCHAR(30) NOT NULL DEFAULT 'Pending',
+    Notes         NVARCHAR(500),
+    PRIMARY KEY (ApprovalID, ApproverID, RequesterID),
+
+    FOREIGN KEY (RequesterID) REFERENCES Users(UserID)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    FOREIGN KEY (ApproverID) REFERENCES Users(UserID)
+        ON DELETE NO ACTION ON UPDATE NO ACTION,
+
     FOREIGN KEY (RequestTypeID) REFERENCES RequestTypes(RequestTypeID)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Tables
@@ -187,6 +207,8 @@ CREATE TABLE AuditLog
     OldValue NVARCHAR(MAX),
     NewValue NVARCHAR(MAX),
     Timestamp DATETIME2 NOT NULL DEFAULT GETDATE(),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (TableID) REFERENCES Tables(TableID)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );

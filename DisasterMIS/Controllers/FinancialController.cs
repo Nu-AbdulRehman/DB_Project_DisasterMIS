@@ -11,31 +11,27 @@ namespace DisasterMIS.Controllers
     {
         public IActionResult Index(string category = "", string dateFrom = "", string dateTo = "")
         {
-            string query = @"SELECT fr.TransactionID, fr.Amount, fr.Category, fr.Description,
-                fr.TransactionDate, de.DisasterType
-                FROM FinancialRecords fr
-                INNER JOIN DisasterEvents de ON fr.EventID = de.EventID
-                WHERE 1=1";
+            string query = "SELECT * FROM vw_FinancialSummary WHERE 1=1";
 
             var parameters = new List<SqlParameter>();
 
             if (!string.IsNullOrEmpty(category))
             {
-                query += " AND fr.Category = @Category";
+                query += " AND Category = @Category";
                 parameters.Add(new SqlParameter("@Category", category));
             }
             if (!string.IsNullOrEmpty(dateFrom))
             {
-                query += " AND fr.TransactionDate >= @DateFrom";
+                query += " AND TransactionDate >= @DateFrom";
                 parameters.Add(new SqlParameter("@DateFrom", dateFrom));
             }
             if (!string.IsNullOrEmpty(dateTo))
             {
-                query += " AND fr.TransactionDate <= @DateTo";
+                query += " AND TransactionDate <= @DateTo";
                 parameters.Add(new SqlParameter("@DateTo", dateTo));
             }
 
-            query += " ORDER BY fr.TransactionDate DESC";
+            query += " ORDER BY TransactionDate DESC";
 
             ViewBag.Records = DbHelper.ExecuteQuery(query, parameters.ToArray());
             ViewBag.DisasterEvents = DbHelper.ExecuteQuery("SELECT * FROM DisasterEvents");

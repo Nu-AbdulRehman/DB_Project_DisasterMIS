@@ -8,44 +8,39 @@ namespace DisasterMIS.Controllers
     [Authorize(Roles = "Administrator")]
     public class AuditController : Controller
     {
-        public IActionResult Index(string table = "", string action = "", string dateFrom = "", string dateTo = "")
+        public IActionResult Index(string table = "", string actionFilter = "", string dateFrom = "", string dateTo = "")
         {
-            string query = @"SELECT al.LogID, al.UserID, al.Action, al.OldValue, al.NewValue, al.Timestamp,
-                u.FullName AS UserName, t.AffectedTable
-                FROM AuditLog al
-                INNER JOIN Users u ON al.UserID = u.UserID
-                INNER JOIN Tables t ON al.TableID = t.TableID
-                WHERE 1=1";
+            string query = "SELECT * FROM vw_AuditTrail WHERE 1=1";
 
             var parameters = new List<SqlParameter>();
 
             if (!string.IsNullOrEmpty(table))
             {
-                query += " AND t.AffectedTable = @Table";
+                query += " AND AffectedTable = @Table";
                 parameters.Add(new SqlParameter("@Table", table));
             }
-            if (!string.IsNullOrEmpty(action))
+            if (!string.IsNullOrEmpty(actionFilter))
             {
-                query += " AND al.Action = @Action";
-                parameters.Add(new SqlParameter("@Action", action));
+                query += " AND Action = @Action";
+                parameters.Add(new SqlParameter("@Action", actionFilter));
             }
             if (!string.IsNullOrEmpty(dateFrom))
             {
-                query += " AND al.Timestamp >= @DateFrom";
+                query += " AND Timestamp >= @DateFrom";
                 parameters.Add(new SqlParameter("@DateFrom", dateFrom));
             }
             if (!string.IsNullOrEmpty(dateTo))
             {
-                query += " AND al.Timestamp <= @DateTo";
+                query += " AND Timestamp <= @DateTo";
                 parameters.Add(new SqlParameter("@DateTo", dateTo));
             }
 
-            query += " ORDER BY al.Timestamp DESC";
+            query += " ORDER BY Timestamp DESC";
 
             ViewBag.Logs = DbHelper.ExecuteQuery(query, parameters.ToArray());
             ViewBag.Tables = DbHelper.ExecuteQuery("SELECT DISTINCT AffectedTable FROM Tables ORDER BY AffectedTable");
             ViewBag.TableFilter = table;
-            ViewBag.ActionFilter = action;
+            ViewBag.ActionFilter = actionFilter;
             return View();
         }
 
@@ -58,7 +53,7 @@ namespace DisasterMIS.Controllers
             ViewBag.Activity = DbHelper.ExecuteQuery(
                 @"SELECT al.LogID, al.Action, t.AffectedTable, al.Timestamp, al.NewValue
                 FROM AuditLog al
-                INNER JOIN Tables t ON al.TableID = t.TableID
+                LEFT JOIN Tables t ON al.TableID = t.TableID
                 WHERE al.UserID = @UserID
                 ORDER BY al.Timestamp DESC",
                 new SqlParameter("@UserID", userID));

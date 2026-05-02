@@ -43,7 +43,8 @@ INNER JOIN DisasterEvents de ON fr.EventID = de.EventID;
 GO
 
 CREATE OR ALTER VIEW vw_ApprovalStatus AS
-SELECT aw.ApprovalID, aw.RequesterID, aw.Status, aw.Notes,
+SELECT aw.ApprovalID, aw.RequesterID, aw.ApproverID, aw.AllocationID,
+    aw.Status, aw.Notes,
     req.FullName AS RequesterName,
     app.FullName AS ApproverName,
     rt.RequestType
@@ -54,12 +55,12 @@ INNER JOIN RequestTypes rt ON aw.RequestTypeID = rt.RequestTypeID;
 GO
 
 CREATE OR ALTER VIEW vw_AuditTrail AS
-SELECT al.LogID, al.Action, al.OldValue, al.NewValue, al.Timestamp,
+SELECT al.LogID, al.UserID, al.Action, al.OldValue, al.NewValue, al.Timestamp,
     u.FullName AS UserName,
     t.AffectedTable
 FROM AuditLog al
-INNER JOIN Users u ON al.UserID = u.UserID
-INNER JOIN Tables t ON al.TableID = t.TableID;
+LEFT JOIN Users u ON al.UserID = u.UserID
+LEFT JOIN Tables t ON al.TableID = t.TableID;
 GO
 
 CREATE OR ALTER VIEW vw_FinanceOfficerView AS

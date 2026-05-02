@@ -12,12 +12,7 @@ namespace DisasterMIS.Controllers
         public IActionResult Index()
         {
             ViewBag.Resources = DbHelper.ExecuteQuery(
-                @"SELECT r.ResourceID, r.ResourceName, r.StockLevel, r.ThresholdLevel,
-                rtype.ResourceType,
-                CASE WHEN r.StockLevel <= r.ThresholdLevel THEN 'Low Stock' ELSE 'OK' END AS StockStatus
-                FROM Resources r
-                INNER JOIN ResourceTypes rtype ON r.ResourceTypeID = rtype.ResourceTypeID
-                ORDER BY rtype.ResourceType, r.ResourceName");
+                "SELECT * FROM vw_ResourceInventory ORDER BY ResourceType, ResourceName");
 
             return View();
         }
@@ -25,13 +20,7 @@ namespace DisasterMIS.Controllers
         public IActionResult Warehouses()
         {
             ViewBag.Stock = DbHelper.ExecuteQuery(
-                @"SELECT w.Name AS WarehouseName, w.Location, r.ResourceName, ws.Stock,
-                rtype.ResourceType
-                FROM WarehouseStock ws
-                INNER JOIN Warehouses w ON ws.WarehouseID = w.WarehouseID
-                INNER JOIN Resources r ON ws.ResourceID = r.ResourceID
-                INNER JOIN ResourceTypes rtype ON r.ResourceTypeID = rtype.ResourceTypeID
-                ORDER BY w.Name, rtype.ResourceType");
+                "SELECT * FROM vw_WarehouseInventory ORDER BY WarehouseName, ResourceType");
 
             ViewBag.Warehouses = DbHelper.ExecuteQuery("SELECT * FROM Warehouses");
             return View();

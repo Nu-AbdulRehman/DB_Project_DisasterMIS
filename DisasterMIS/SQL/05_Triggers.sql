@@ -142,3 +142,14 @@ BEGIN
     END
 END
 GO
+
+CREATE TRIGGER trg_DeleteApprovalWorkflow_OnApproverDelete
+ON Users
+AFTER DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM ApprovalWorkflow
+    WHERE ApproverID IN (SELECT UserID FROM deleted);
+END;
+GO

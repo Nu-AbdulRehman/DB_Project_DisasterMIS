@@ -34,10 +34,16 @@ namespace DisasterMIS.Controllers
             ViewBag.OccupiedBeds = occupiedBeds;
 
             var recentReports = DbHelper.ExecuteQuery(
-                "SELECT TOP 5 er.ReportID, er.Location, er.SeverityLevel, er.Status, er.ReportTime, de.DisasterType " +
-                "FROM EmergencyReports er INNER JOIN DisasterEvents de ON er.EventID = de.EventID " +
-                "ORDER BY er.ReportTime DESC");
+                "SELECT TOP 5 * FROM vw_ActiveEmergencies ORDER BY ReportTime DESC");
             ViewBag.RecentReports = recentReports;
+
+            // Role-scoped views
+            if (role == "Field Officer" || role == "Emergency Operator")
+                ViewBag.RoleView = DbHelper.ExecuteQuery(
+                    "SELECT TOP 5 * FROM vw_FieldOfficerView ORDER BY ReportTime DESC");
+            else if (role == "Finance Officer")
+                ViewBag.RoleView = DbHelper.ExecuteQuery(
+                    "SELECT TOP 5 * FROM vw_FinanceOfficerView ORDER BY TransactionDate DESC");
 
             var severityData = DbHelper.ExecuteQuery(
                 "SELECT SeverityLevel, COUNT(*) AS Count FROM EmergencyReports GROUP BY SeverityLevel ORDER BY SeverityLevel");

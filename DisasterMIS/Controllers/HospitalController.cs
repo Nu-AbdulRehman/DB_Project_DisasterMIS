@@ -12,14 +12,7 @@ namespace DisasterMIS.Controllers
         public IActionResult Index()
         {
             ViewBag.Hospitals = DbHelper.ExecuteQuery(
-                @"SELECT h.HospitalID, h.Name, h.Location, h.TotalBeds,
-                h.TotalBeds - COUNT(a.PatientID) AS AvailableBeds,
-                SUM(CASE WHEN p.Status = 'Critical' THEN 1 ELSE 0 END) AS CriticalCases
-                FROM Hospitals h
-                LEFT JOIN Admits a ON h.HospitalID = a.HospitalID
-                LEFT JOIN Patients p ON a.PatientID = p.PatientID
-                GROUP BY h.HospitalID, h.Name, h.Location, h.TotalBeds
-                ORDER BY h.Name");
+                "SELECT * FROM vw_HospitalCapacity ORDER BY Name");
 
             return View();
         }

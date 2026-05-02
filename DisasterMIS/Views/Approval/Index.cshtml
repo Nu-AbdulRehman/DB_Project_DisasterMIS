@@ -2,7 +2,7 @@
     ViewData["Title"] = "Approval Workflow";
     var approvals     = ViewBag.Approvals     as System.Data.DataTable;
     var requestTypes  = ViewBag.RequestTypes  as System.Data.DataTable;
-    string statusFilter = ViewBag.StatusFilter ?? "Pending";
+    string statusFilter = ViewBag.StatusFilter?.ToString() ?? "Pending";
 }
 
 <div class="page-header">
@@ -20,7 +20,7 @@
         string isActive = statusFilter == s ? "btn-primary" : "btn-secondary";
         <a asp-action="Index" asp-route-status="@s" class="btn @isActive">@s</a>
     }
-    <a asp-action="Index" asp-route-status="" class="btn @(string.IsNullOrEmpty(statusFilter) ? "btn-primary" : "btn-secondary")">All</a>
+    <a asp-action="Index" asp-route-status="All" class="btn @(statusFilter == "All" ? "btn-primary" : "btn-secondary")">All</a>
 </div>
 
 <div class="card">
@@ -92,7 +92,7 @@
                 {
                     <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">
                         <i class="fas fa-check-double" style="font-size:32px;display:block;margin-bottom:12px;opacity:.3"></i>
-                        No @statusFilter.ToLower() requests
+                        No @(statusFilter == "All" ? "" : statusFilter.ToLower() + " ")requests found
                     </td></tr>
                 }
             </tbody>

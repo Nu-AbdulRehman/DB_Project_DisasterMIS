@@ -12,9 +12,7 @@ namespace DisasterMIS.Controllers
         public IActionResult Index()
         {
             ViewBag.Teams = DbHelper.ExecuteQuery(
-                @"SELECT rt.TeamID, rt.TeamName, rt.CurrentLocation, rt.AvailabilityStatus, tt.TeamType
-                FROM RescueTeams rt INNER JOIN TeamTypes tt ON rt.TeamTypeID = tt.TeamTypeID
-                ORDER BY rt.AvailabilityStatus, rt.TeamName");
+                "SELECT * FROM vw_TeamAvailability ORDER BY AvailabilityStatus, TeamName");
 
             ViewBag.Assignments = DbHelper.ExecuteQuery(
                 @"SELECT ra.AssignmentID, ra.ReportID, ra.TeamID, ra.AssignedAt, ra.CompletedAt, ra.Status,
@@ -58,9 +56,7 @@ namespace DisasterMIS.Controllers
                 ORDER BY er.SeverityLevel DESC");
 
             ViewBag.Teams = DbHelper.ExecuteQuery(
-                @"SELECT rt.TeamID, rt.TeamName, rt.CurrentLocation, tt.TeamType
-                FROM RescueTeams rt INNER JOIN TeamTypes tt ON rt.TeamTypeID = tt.TeamTypeID
-                WHERE rt.AvailabilityStatus = 'Available'");
+                "SELECT * FROM vw_TeamAvailability WHERE AvailabilityStatus = 'Available'");
 
             return View();
         }
