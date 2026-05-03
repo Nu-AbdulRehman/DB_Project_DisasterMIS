@@ -1,12 +1,7 @@
 USE DisasterMIS;
 GO
 
--- ========================================================
--- PERFORMANCE ANALYSIS: Index vs No-Index Comparison
--- Run with: SET STATISTICS TIME ON; SET STATISTICS IO ON;
--- ========================================================
-
--- ── TEST 1: Location filter (uses IX_EmergencyReports_Location) ──────────────
+-- TEST 1: Location filter (uses IX_EmergencyReports_Location)
 
 PRINT '=== TEST 1A: Location filter WITHOUT index (forced table scan) ===';
 SET STATISTICS TIME ON;
@@ -30,7 +25,7 @@ SET STATISTICS TIME OFF;
 SET STATISTICS IO OFF;
 GO
 
--- ── TEST 2: Severity level filter (uses IX_EmergencyReports_SeverityLevel) ───
+-- TEST 2: Severity level filter (uses IX_EmergencyReports_SeverityLevel)
 
 PRINT '=== TEST 2A: Severity filter WITHOUT index (forced table scan) ===';
 SET STATISTICS TIME ON;
@@ -54,7 +49,7 @@ SET STATISTICS TIME OFF;
 SET STATISTICS IO OFF;
 GO
 
--- ── TEST 3: Financial records date range ─────────────────────────────────────
+-- TEST 3: Financial records date range
 
 PRINT '=== TEST 3A: Financial date range WITHOUT index ===';
 SET STATISTICS TIME ON;
@@ -78,7 +73,7 @@ SET STATISTICS TIME OFF;
 SET STATISTICS IO OFF;
 GO
 
--- ── TEST 4: View vs Direct table query (ActiveEmergencies) ───────────────────
+-- TEST 4: View vs Direct table query (ActiveEmergencies)
 
 PRINT '=== TEST 4A: Active emergencies via DIRECT table query ===';
 SET STATISTICS TIME ON;
@@ -105,7 +100,7 @@ SET STATISTICS TIME OFF;
 SET STATISTICS IO OFF;
 GO
 
--- ── TEST 5: View vs Direct table query (HospitalCapacity) ────────────────────
+-- TEST 5: View vs Direct table query (HospitalCapacity)
 
 PRINT '=== TEST 5A: Hospital capacity via DIRECT aggregation ===';
 SET STATISTICS TIME ON;
@@ -133,7 +128,7 @@ SET STATISTICS TIME OFF;
 SET STATISTICS IO OFF;
 GO
 
--- ── TEST 6: Composite index on RescueAssignments ─────────────────────────────
+-- TEST 6: Composite index on RescueAssignments 
 
 PRINT '=== TEST 6A: Active rescue assignments WITHOUT composite index ===';
 SET STATISTICS TIME ON;
@@ -162,19 +157,3 @@ WHERE ra.Status IN ('Assigned', 'In Progress');
 SET STATISTICS TIME OFF;
 SET STATISTICS IO OFF;
 GO
-
-/*
-== EXPECTED FINDINGS ==
-- Tests 1-3: Index scans reduce logical reads significantly on large datasets.
-             LIKE '%...' may still cause partial scans (leading wildcard).
-- Tests 4-5: Views show similar or slightly higher overhead on small datasets
-             due to metadata resolution, but provide better security/abstraction.
-             On large datasets views with pre-compiled execution plans perform better.
-- Test 6:    Composite index on (TeamID, Status) reduces the rescue assignment
-             status filter from full table scan to index seek.
-
-== HOW TO READ STATISTICS OUTPUT ==
-  "Table 'X'. Scan count N, logical reads M"
-  "SQL Server Execution Times: CPU time = X ms, elapsed time = Y ms"
-  Lower logical reads and elapsed time = better performance.
-*/
